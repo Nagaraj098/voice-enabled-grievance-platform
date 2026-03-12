@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+
+from fastapi import FastAPI, UploadFile, File
 
 app = FastAPI()
 
@@ -9,3 +10,10 @@ def home():
 @app.get("/health")
 def health():
     return {"status": "OK"}
+
+from services.stt_service import speech_to_text
+@app.post("/stt")
+async def stt(file: UploadFile = File(...)):
+    audio = await file.read()
+    result = speech_to_text((file.filename, audio, file.content_type))
+    return result
