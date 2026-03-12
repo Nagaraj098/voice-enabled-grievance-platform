@@ -1,28 +1,23 @@
-from dotenv import load_dotenv
-import os
-import requests
+from faster_whisper import WhisperModel
+import tempfile
 
-load_dotenv()
-
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL")
-STT_MODEL = os.getenv("STT_MODEL")
+# Load model once when server starts
+model = WhisperModel("base", device="cpu", compute_type="int8")
 
 def speech_to_text(audio_file):
-    url = f"{OPENROUTER_BASE_URL}/audio/transcriptions"
 
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}"
-    }
+    filename, audio_bytes, content_type = audio_file
 
-    files = {
-        "file": audio_file
-    }
+    # Save temporary audio file
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp:
+        temp.write(audio_bytes)
+        temp_path = temp.name
 
-    data = {
-        "model": "openai/whisper-1"
-    }
+    # Transcribe audio
+    segments, info = model.transcribe(temp_path)
 
-    response = requests.post(url, headers=headers, files=files, data=data)
+    text = ""
+    for segment in segments:
+        text += segment.text
 
-    return response.json()
+    return {"text": text}
