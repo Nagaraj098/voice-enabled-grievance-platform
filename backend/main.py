@@ -1,5 +1,10 @@
 from fastapi import FastAPI, UploadFile, File
 from services.stt_service import speech_to_text
+from services.llm_service import generate_response
+from pydantic import BaseModel
+
+class ChatRequest(BaseModel):
+    message: str
 
 app = FastAPI()
 
@@ -20,3 +25,15 @@ async def stt(file: UploadFile = File(...)):
     )
 
     return result
+
+@app.post("/chat")
+async def chat(request: ChatRequest):
+
+    user_message = request.message
+
+    ai_reply = generate_response(user_message)
+
+    return {
+        "user_message": user_message,
+        "ai_response": ai_reply
+    }
