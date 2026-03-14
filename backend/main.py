@@ -1,20 +1,35 @@
 from fastapi import FastAPI, UploadFile, File
+from fastapi.middleware.cors import CORSMiddleware
 from services.stt_service import speech_to_text
 from services.llm_service import generate_response
 from pydantic import BaseModel
 
+
 class ChatRequest(BaseModel):
     message: str
 
+
 app = FastAPI()
+
+# Allow frontend (Next.js) to access backend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.get("/")
 def home():
     return {"message": "Backend running successfully"}
 
+
 @app.get("/health")
 def health():
     return {"status": "OK"}
+
 
 @app.post("/stt")
 async def stt(file: UploadFile = File(...)):
@@ -25,6 +40,7 @@ async def stt(file: UploadFile = File(...)):
     )
 
     return result
+
 
 @app.post("/chat")
 async def chat(request: ChatRequest):
