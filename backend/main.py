@@ -1,25 +1,34 @@
 from fastapi import FastAPI, UploadFile, File
-from fastapi.middleware.cors import CORSMiddleware
-from services.stt_service import speech_to_text
-from services.llm_service import generate_response
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-
-class ChatRequest(BaseModel):
-    message: str
-
+from services.stt_service import speech_to_text
+from services.llm_service import generate_response
+from services.tts_service import text_to_speech
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# Allow frontend (Next.js) to access backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # frontend URL
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+
+# ----------- REQUEST MODELS -----------
+
+class ChatRequest(BaseModel):
+    message: str
+
+
+class TTSRequest(BaseModel):
+    text: str
+
+
+# ----------- ROUTES -----------
 
 @app.get("/")
 def home():
@@ -34,22 +43,27 @@ def health():
 @app.post("/stt")
 async def stt(file: UploadFile = File(...)):
     audio = await file.read()
-
-    result = speech_to_text(
-        (file.filename, audio, file.content_type)
-    )
-
+    result = speech_to_text((file.filename, audio, file.content_type))
     return result
 
 
 @app.post("/chat")
 async def chat(request: ChatRequest):
-
-    user_message = request.message
-
-    ai_reply = generate_response(user_message)
+    ai_reply = generate_response(request.message)
 
     return {
-        "user_message": user_message,
+        "user_message": request.message,
         "ai_response": ai_reply
     }
+
+
+@app.post("/tts")
+async def tts(request: TTSRequest):
+
+    audio_path = text_to_speech(request.text)
+
+    return FileResponse(
+        audio_path,
+        media_type="audio/mpeg",
+        filename="response.mp3"
+    )

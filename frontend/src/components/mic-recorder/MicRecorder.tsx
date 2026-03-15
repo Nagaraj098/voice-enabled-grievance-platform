@@ -32,7 +32,6 @@ export default function MicRecorder() {
         const url = URL.createObjectURL(audioBlob);
         setAudioUrl(url);
 
-        // send audio to backend
         sendAudioToBackend(audioBlob);
 
         stream.getTracks().forEach((track) => track.stop());
@@ -55,45 +54,63 @@ export default function MicRecorder() {
     }
   };
 
- const sendAudioToBackend = async (blob: Blob) => {
-  const formData = new FormData();
-  formData.append("file", blob, "audio.webm");
+  const sendAudioToBackend = async (blob: Blob) => {
+    const formData = new FormData();
+    formData.append("file", blob, "audio.webm");
 
-  try {
-    // Step 1 → Speech to Text
-    const sttResponse = await fetch("http://127.0.0.1:8000/stt", {
-      method: "POST",
-      body: formData,
-    });
+    try {
+      // STEP 1 → Speech to Text
+      const sttResponse = await fetch("http://127.0.0.1:8000/stt", {
+        method: "POST",
+        body: formData,
+      });
 
-    const sttData = await sttResponse.json();
-    console.log("STT result:", sttData);
+      const sttData = await sttResponse.json();
+      console.log("STT result:", sttData);
 
-    const text = sttData.text;
+      const text = sttData.text;
 
-    // Step 2 → Send text to LLM
-    const chatResponse = await fetch("http://127.0.0.1:8000/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ message: text }),
-    });
+      // STEP 2 → Send text to LLM
+      const chatResponse = await fetch("http://127.0.0.1:8000/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: text }),
+      });
 
-    const chatData = await chatResponse.json();
-    console.log("AI response:", chatData);
+      const chatData = await chatResponse.json();
+      console.log("AI response:", chatData);
 
-    setBackendResponse(chatData.ai_response);
+      setBackendResponse(chatData.ai_response);
 
-  } catch (error) {
-    console.error("Error sending audio:", error);
-    setBackendResponse("Error contacting backend");
-  }
-};
+      // STEP 3 → Convert AI response to speech
+      const ttsResponse = await fetch("http://127.0.0.1:8000/tts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text: chatData.ai_response,
+        }),
+      });
+
+      const audioBlob = await ttsResponse.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      // 🔊 Auto play AI voice
+      const audio = new Audio(audioUrl);
+      audio.play();
+
+    } catch (error) {
+      console.error("Error sending audio:", error);
+      setBackendResponse("Error contacting backend");
+    }
+  };
 
   return (
     <div className="flex flex-col items-center gap-6 p-8 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 w-full max-w-md">
-      
+
       {!isRecording ? (
         <button
           onClick={startRecording}
@@ -129,6 +146,7 @@ export default function MicRecorder() {
           </p>
         </div>
       )}
+
     </div>
   );
 }
