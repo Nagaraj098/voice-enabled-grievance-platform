@@ -6,6 +6,7 @@ export default function MicRecorder() {
   const [isRecording, setIsRecording] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [backendResponse, setBackendResponse] = useState<string | null>(null);
+  const [ttsAudioUrl, setTtsAudioUrl] = useState<string | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -41,6 +42,7 @@ export default function MicRecorder() {
       setIsRecording(true);
       setAudioUrl(null);
       setBackendResponse(null);
+      setTtsAudioUrl(null);
     } catch (error) {
       console.error("Error accessing microphone:", error);
       alert("Could not access the microphone. Please grant permissions.");
@@ -98,9 +100,7 @@ export default function MicRecorder() {
       const audioBlob = await ttsResponse.blob();
       const audioUrl = URL.createObjectURL(audioBlob);
 
-      // 🔊 Auto play AI voice
-      const audio = new Audio(audioUrl);
-      audio.play();
+      setTtsAudioUrl(audioUrl);
 
     } catch (error) {
       console.error("Error sending audio:", error);
@@ -108,45 +108,57 @@ export default function MicRecorder() {
     }
   };
 
-  return (
-    <div className="flex flex-col items-center gap-6 p-8 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 w-full max-w-md">
+ return (
+  <div className="flex flex-col items-center gap-6 p-8 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 w-full max-w-md">
 
-      {!isRecording ? (
-        <button
-          onClick={startRecording}
-          className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95 flex items-center gap-2"
-        >
-          🎤 Start Recording
-        </button>
-      ) : (
-        <button
-          onClick={stopRecording}
-          className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95 flex items-center gap-2 animate-pulse"
-        >
-          ⏹ Stop Recording
-        </button>
-      )}
+    {!isRecording ? (
+      <button
+        onClick={startRecording}
+        className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95 flex items-center gap-2"
+      >
+        🎤 Start Recording
+      </button>
+    ) : (
+      <button
+        onClick={stopRecording}
+        className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95 flex items-center gap-2 animate-pulse"
+      >
+        ⏹ Stop Recording
+      </button>
+    )}
 
-      {audioUrl && (
-        <div className="flex flex-col items-center gap-3 w-full mt-4">
-          <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-            Recording saved successfully
-          </p>
+    {audioUrl && (
+      <div className="flex flex-col items-center gap-3 w-full mt-4">
+        <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+          Recording saved successfully
+        </p>
 
-          <audio controls src={audioUrl} className="w-full rounded-lg" />
-        </div>
-      )}
+        <audio controls src={audioUrl} className="w-full rounded-lg" />
+      </div>
+    )}
 
-      {backendResponse && (
-        <div className="mt-4 p-4 bg-zinc-100 dark:bg-zinc-800 rounded-lg w-full text-center">
-          <p className="text-sm font-semibold">Backend Response</p>
+    {backendResponse && (
+      <div className="mt-4 p-4 bg-zinc-100 dark:bg-zinc-800 rounded-lg w-full text-center space-y-3">
+        <p className="text-sm font-semibold">AI Response</p>
 
-          <p className="text-sm text-zinc-600 dark:text-zinc-300 break-words">
-            {backendResponse}
-          </p>
-        </div>
-      )}
+        <p className="text-sm text-zinc-600 dark:text-zinc-300 break-words">
+          {backendResponse}
+        </p>
 
-    </div>
-  );
+        {ttsAudioUrl && (
+          <button
+            onClick={() => {
+              const audio = new Audio(ttsAudioUrl);
+              audio.play();
+            }}
+            className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-full"
+          >
+            🔊 Play AI Voice
+          </button>
+        )}
+      </div>
+    )}
+
+  </div>
+);
 }
