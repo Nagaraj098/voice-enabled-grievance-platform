@@ -1,19 +1,53 @@
-import Image from "next/image";
-import MicRecorder from "@/components/mic-recorder/MicRecorder";
+"use client";
+
+import { useState } from "react";
+import CallControls from "@/components/call/CallControls";
+import ChatTranscript from "@/components/chat/ChatTranscript";
+import FullTranscript from "@/components/chat/FullTranscript";
 
 export default function Home() {
-  return (
-    <div className="flex flex-col min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950 font-sans p-8">
-      <main className="flex flex-col items-center justify-center max-w-2xl w-full text-center space-y-8">
-        <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-          Voice AI Platform
-        </h1>
-        <p className="text-lg sm:text-xl text-zinc-600 dark:text-zinc-400 max-w-lg mb-4">
-          Welcome to the Voice AI Platform. Use the microphone controls below to start your recording session.
-        </p>
+  const [tab, setTab] = useState<"live" | "full">("live");
 
-        <MicRecorder />
-      </main>
-    </div>
+  return (
+    <main className="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-8 p-6 min-h-screen">
+      
+      {/* LEFT SIDE (Controls) */}
+      <div className="flex flex-col items-center gap-6">
+        <h1 className="text-3xl font-bold">Voice AI Platform</h1>
+
+        <CallControls />
+
+        {/* Tabs */}
+        <div className="flex gap-4">
+          <button
+            onClick={() => setTab("live")}
+            className={`px-4 py-1 rounded ${
+              tab === "live"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200"
+            }`}
+          >
+            Live Chat
+          </button>
+
+          <button
+            onClick={() => setTab("full")}
+            className={`px-4 py-1 rounded ${
+              tab === "full"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200"
+            }`}
+          >
+            Full Transcript
+          </button>
+        </div>
+      </div>
+
+      {/* RIGHT SIDE (Chat Area) */}
+      <div>
+        {tab === "live" && <ChatTranscript />}
+        {tab === "full" && <FullTranscript />}
+      </div>
+    </main>
   );
 }
