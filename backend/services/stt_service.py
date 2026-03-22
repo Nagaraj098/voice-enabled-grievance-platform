@@ -8,7 +8,7 @@ class STTService:
 
         # ✅ CPU optimized + better accuracy
         self.model = WhisperModel(
-            "base",              # you can upgrade to "small" later
+            "small",              # you can upgrade to "small" later
             device="cpu",
             compute_type="int8"
         )

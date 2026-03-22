@@ -1,14 +1,22 @@
 from gtts import gTTS
 import tempfile
+import base64
 
-def text_to_speech(text):
+class TTSService:
 
-    # create temporary audio file
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp:
-        file_path = temp.name
+    def generate_audio_base64(self, text: str):
 
-    # generate speech
-    tts = gTTS(text=text, lang="en")
-    tts.save(file_path)
+        # create temp file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp:
+            file_path = temp.name
 
-    return file_path
+        # generate speech
+        tts = gTTS(text=text, lang="en")
+        tts.save(file_path)
+
+        # read file
+        with open(file_path, "rb") as f:
+            audio_bytes = f.read()
+
+        # convert to base64
+        return base64.b64encode(audio_bytes).decode("utf-8")

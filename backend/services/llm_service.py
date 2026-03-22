@@ -2,39 +2,53 @@ import requests
 import os
 from dotenv import load_dotenv
 
-# load environment variables
+# Load environment variables
 load_dotenv()
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-BASE_URL = os.getenv("OPENROUTER_BASE_URL")
-MODEL = os.getenv("MODEL_NAME")
+BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+
+MODEL = "mistralai/mistral-7b-instruct"
 
 
-def generate_response(user_message):
+class LLMService:
 
-    url = f"{BASE_URL}/chat/completions"
+    def __init__(self):
+        if not OPENROUTER_API_KEY:
+            raise ValueError("OPENROUTER_API_KEY is missing in .env")
 
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "Content-Type": "application/json"
-    }
-
-    payload = {
-        "model": MODEL,
-        "messages": [
-            {
-                "role": "system",
-                "content": "You are an assistant helping users register grievances."
-            },
-            {
-                "role": "user",
-                "content": user_message
-            }
+    def generate(self, messages: list):
+        """
+        messages format:
+        [
+            {"role": "user", "content": "..."},
+            {"role": "assistant", "content": "..."}
         ]
-    }
+        """
 
-    response = requests.post(url, headers=headers, json=payload)
+        try:
+            url = f"{BASE_URL}/chat/completions"
 
-    data = response.json()
+            headers = {
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Content-Type": "application/json",
+            }
 
-    return data["choices"][0]["message"]["content"]
+            payload = {
+                "model": MODEL,
+                "messages": messages,
+            }
+
+            response = requests.post(url, headers=headers, json=payload)
+
+            if response.status_code != 200:
+                print("OpenRouter Error:", response.text)
+                return "Sorry, I am having trouble responding right now."
+
+            data = response.json()
+
+            return data["choices"][0]["message"]["content"]
+
+        except Exception as e:
+            print("LLM Error:", str(e))
+            return "Error generating response."
