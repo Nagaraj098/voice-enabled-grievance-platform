@@ -1,37 +1,44 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Message } from "@/types/chat";
 
 export function useTranscript() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isThinking, setIsThinking] = useState(false);
+  const [audio, setAudio] = useState<string | null>(null);
 
-  // 🔥 MOCK DATA (for UI testing now)
+  const wsRef = useRef<WebSocket | null>(null);
+
+  // 🔥 control mode from env (BEST PRACTICE)
+  const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === "true";
+
+  // =========================
+  // 🧪 MOCK MODE
+  // =========================
   useEffect(() => {
+    if (!USE_MOCK) return;
+
     setMessages([
-  {
-    id: crypto.randomUUID(),
-    role: "user",
-    text: "Hello",
-    timestamp: Date.now(),
-  },
-  {
-    id: crypto.randomUUID(),
-    role: "agent",
-    text: "Hi, how can I help you?",
-    timestamp: Date.now(),
-  },
-]);
+      {
+        id: crypto.randomUUID(),
+        role: "user",
+        text: "Hello",
+        timestamp: Date.now(),
+      },
+      {
+        id: crypto.randomUUID(),
+        role: "agent",
+        text: "Hi, how can I help you?",
+        timestamp: Date.now(),
+      },
+    ]);
 
-    // simulate agent thinking after 2s
-    setTimeout(() => {
-      setIsThinking(true);
-    }, 2000);
+    const t1 = setTimeout(() => setIsThinking(true), 2000);
 
-    // simulate agent response after 4s
-    setTimeout(() => {
+    const t2 = setTimeout(() => {
       setIsThinking(false);
+
       setMessages((prev) => [
         ...prev,
         {
@@ -41,15 +48,33 @@ export function useTranscript() {
           timestamp: Date.now(),
         },
       ]);
-    }, 4000);
-  }, []);
 
-  // 🔌 REAL WEBSOCKET (will work when backend is ready)
+      // 🔊 mock audio
+      setAudio(
+        "UklGRigAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA="
+      );
+    }, 4000);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [USE_MOCK]);
+
+  // =========================
+  // 🔌 WEBSOCKET MODE
+  // =========================
   useEffect(() => {
+    if (USE_MOCK) return;
+
+    // ✅ prevent multiple connections
+    if (wsRef.current) return;
+
     const ws = new WebSocket("ws://localhost:8000/ws/transcript");
+    wsRef.current = ws;
 
     ws.onopen = () => {
-      console.log("WebSocket connected");
+      console.log("✅ WS connected");
     };
 
     ws.onmessage = (event) => {
@@ -69,8 +94,13 @@ export function useTranscript() {
             ]);
             break;
 
+          case "agent_thinking":
+            setIsThinking(true);
+            break;
+
           case "agent_response":
             setIsThinking(false);
+
             setMessages((prev) => [
               ...prev,
               {
@@ -82,28 +112,32 @@ export function useTranscript() {
             ]);
             break;
 
-          case "agent_thinking":
-            setIsThinking(true);
+          case "agent_audio":
+            setAudio(data.audio);
             break;
 
           default:
-            console.log("Unknown event:", data);
+            console.log("⚠️ Unknown event:", data);
         }
       } catch (err) {
-        console.error("Invalid WS message", err);
+        console.error("❌ Invalid WS message", err);
       }
     };
 
-    ws.onerror = () => {
-      console.log("WebSocket error (backend not running yet)");
+    ws.onerror = (err) => {
+      console.log("❌ WS error", err);
     };
 
     ws.onclose = () => {
-      console.log("WebSocket closed");
+      console.log("🔌 WS closed");
+      wsRef.current = null;
     };
 
-    return () => ws.close();
-  }, []);
+    return () => {
+      ws.close();
+      wsRef.current = null;
+    };
+  }, [USE_MOCK]);
 
-  return { messages, isThinking };
+  return { messages, isThinking, audio };
 }
