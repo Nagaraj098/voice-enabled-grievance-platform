@@ -12,21 +12,28 @@ export default function CallControls() {
   const handleStart = async () => {
     try {
       setError("");
+
       await connectRoom();
+
       setConnected(true);
+
+      console.log("Call started");
     } catch (err) {
-      setError("Failed to connect. Check backend or LiveKit.");
+      console.error(err);
+      setError("Failed to connect. Is backend running?");
     }
   };
 
   const handleEnd = async () => {
     await disconnectRoom();
+
     setConnected(false);
+
+    console.log("Call ended");
   };
 
   return (
     <div className="flex flex-col items-center gap-4">
-      {/* Button */}
       <button
         onClick={connected ? handleEnd : handleStart}
         className={`px-6 py-2 rounded text-white ${
@@ -36,7 +43,6 @@ export default function CallControls() {
         {connected ? "End Call" : "Start Call"}
       </button>
 
-      {/* Mic Indicator */}
       <div className="flex items-center gap-2">
         <div
           className={`w-3 h-3 rounded-full ${
@@ -46,7 +52,6 @@ export default function CallControls() {
         <span>{connected ? "Mic Active" : "Mic Off"}</span>
       </div>
 
-      {/* Error */}
       {error && <p className="text-red-500">{error}</p>}
     </div>
   );

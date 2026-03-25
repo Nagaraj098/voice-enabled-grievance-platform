@@ -1,23 +1,45 @@
 from faster_whisper import WhisperModel
-import tempfile
+import numpy as np
 
-# Load model once when server starts
-model = WhisperModel("base", device="cpu", compute_type="int8")
 
-def speech_to_text(audio_file):
+class STTService:
+    def __init__(self):
+        print("Loading Whisper model...")
 
-    filename, audio_bytes, content_type = audio_file
+        # ✅ CPU optimized + better accuracy
+        self.model = WhisperModel(
+            "base",              # you can upgrade to "small" later
+            device="cpu",
+            compute_type="int8"
+        )
 
-    # Save temporary audio file
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp:
-        temp.write(audio_bytes)
-        temp_path = temp.name
+        print("Whisper model loaded")
 
-    # Transcribe audio
-    segments, info = model.transcribe(temp_path)
+    def transcribe(self, audio_bytes: bytes) -> str:
+        if not audio_bytes:
+            return ""
 
-    text = ""
-    for segment in segments:
-        text += segment.text
+        # 🔥 Convert PCM → float32
+        audio_np = (
+            np.frombuffer(audio_bytes, dtype=np.int16)
+            .astype(np.float32) / 32768.0
+        )
 
-    return {"text": text}
+        try:
+            segments, _ = self.model.transcribe(
+                audio_np,
+                beam_size=5,          # 🔥 improves accuracy
+                language="en",        # 🔥 avoid wrong language detection
+                vad_filter=True,      # 🔥 removes silence/noise
+                vad_parameters=dict(
+                    min_silence_duration_ms=500
+                )
+            )
+
+            text = " ".join([seg.text for seg in segments]).strip()
+
+            return text
+
+        except Exception as e:
+            print("STT Error:", e)
+            return ""
