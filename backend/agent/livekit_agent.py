@@ -1,6 +1,4 @@
-import sys
-import os
-
+import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import asyncio
@@ -9,93 +7,101 @@ import numpy as np
 from livekit import rtc
 from livekit.api import AccessToken, VideoGrants
 
-# NEW imports
 from agent.audio_buffer import AudioBuffer
 from services.stt_service import STTService
+from services.llm_service import generate_response
 from sockets.connection_manager import manager
 
-
+# 🔐 LiveKit Config
 LIVEKIT_URL = "ws://localhost:7880"
-
 API_KEY = "devkey"
 API_SECRET = "supersecretkeysupersecretkey1234567890abcd"
-
 ROOM_NAME = "testroom"
 IDENTITY = "ai-agent"
 
+LIVEKIT_SAMPLE_RATE = 48000   # LiveKit default
+WHISPER_SAMPLE_RATE = 16000   # Whisper expects this
 
-# ✅ Initialize services
 buffer = AudioBuffer()
 stt = STTService()
 
 
-async def process_audio(track):
+def resample(pcm: np.ndarray, orig_sr: int, target_sr: int) -> np.ndarray:
+    """Simple linear resample from orig_sr to target_sr."""
+    if orig_sr == target_sr:
+        return pcm
+    ratio = target_sr / orig_sr
+    new_len = int(len(pcm) * ratio)
+    return np.interp(
+        np.linspace(0, len(pcm) - 1, new_len),
+        np.arange(len(pcm)),
+        pcm
+    ).astype(np.int16)
 
+
+async def process_audio(track):
+    print("🎧 Processing audio stream...")
     audio_stream = rtc.AudioStream(track)
 
     async for frame in audio_stream:
+        try:
+            pcm = np.frombuffer(frame.frame.data, dtype=np.int16)
 
-        # Convert frame → PCM
-        pcm = np.frombuffer(frame.frame.data, dtype=np.int16)
+            # ✅ Resample 48kHz → 16kHz for Whisper
+            pcm_16k = resample(pcm, LIVEKIT_SAMPLE_RATE, WHISPER_SAMPLE_RATE)
 
-        # Add to buffer (with VAD inside)
-        buffer.add_frame(pcm)
+            buffer.add_frame(pcm_16k)
 
-        # Process when enough audio collected
-        if buffer.is_ready():
+            if buffer.is_ready():
+                audio_bytes = buffer.get_audio()
 
-            audio_bytes = buffer.get_audio()
+                # ✅ STT
+                text = stt.transcribe(audio_bytes, sample_rate=WHISPER_SAMPLE_RATE)
+                if not text:
+                    continue
 
-            text = stt.transcribe(audio_bytes)
+                print(f"🗣 User: {text}")
+                await manager.broadcast({"type": "user_transcript", "text": text})
 
-            if text:
-                print("User said:", text)
+                # ✅ LLM
+                ai_response = generate_response(text)
+                print(f"🤖 AI: {ai_response}")
+                await manager.broadcast({"type": "ai_response", "text": ai_response})
 
-                # ✅ send to frontend
-                await manager.broadcast({
-                    "type": "user_transcript",
-                    "text": text
-                })
+        except Exception as e:
+            print("❌ Audio Processing Error:", e)
 
 
 async def main():
-
     room = rtc.Room()
 
-    # Create token
     token = (
         AccessToken(API_KEY, API_SECRET)
         .with_identity(IDENTITY)
-        .with_grants(
-            VideoGrants(
-                room_join=True,
-                room=ROOM_NAME,
-                can_subscribe=True,
-                can_publish=True,
-            )
-        )
+        .with_grants(VideoGrants(
+            room_join=True,
+            room=ROOM_NAME,
+            can_subscribe=True,
+            can_publish=True,
+        ))
         .to_jwt()
     )
 
-    # Connect to LiveKit
     await room.connect(LIVEKIT_URL, token)
-
-    print("Agent connected to room")
+    print("✅ Agent connected to LiveKit room")
 
     @room.on("track_subscribed")
-    def track_subscribed(track, publication, participant):
-
-        print("Subscribed to:", participant.identity)
-
+    def on_track(track, publication, participant):
+        print(f"📡 Track from: {participant.identity}")
         if track.kind == rtc.TrackKind.KIND_AUDIO:
             asyncio.create_task(process_audio(track))
 
 
 async def start():
     await main()
-
     while True:
         await asyncio.sleep(1)
 
 
-asyncio.run(start())
+if __name__ == "__main__":
+    asyncio.run(start())

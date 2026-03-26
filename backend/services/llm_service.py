@@ -11,30 +11,28 @@ MODEL = os.getenv("MODEL_NAME")
 
 
 def generate_response(user_message):
+    try:
+        url = f"{BASE_URL}/chat/completions"
 
-    url = f"{BASE_URL}/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+            "Content-Type": "application/json"
+        }
 
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "Content-Type": "application/json"
-    }
+        payload = {
+            "model": MODEL,
+            "messages": [
+                {"role": "system", "content": "You are an assistant helping users register grievances."},
+                {"role": "user", "content": user_message}
+            ]
+        }
 
-    payload = {
-        "model": MODEL,
-        "messages": [
-            {
-                "role": "system",
-                "content": "You are an assistant helping users register grievances."
-            },
-            {
-                "role": "user",
-                "content": user_message
-            }
-        ]
-    }
+        response = requests.post(url, headers=headers, json=payload)
 
-    response = requests.post(url, headers=headers, json=payload)
+        data = response.json()
 
-    data = response.json()
+        return data["choices"][0]["message"]["content"]
 
-    return data["choices"][0]["message"]["content"]
+    except Exception as e:
+        print("LLM Error:", e)
+        return "Sorry, I couldn't process that."
