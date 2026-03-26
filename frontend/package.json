@@ -9,8 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.0.6",
     "livekit-client": "^2.17.3",
     "livekit-server-sdk": "^2.15.0",
+    "lucide-react": "^1.6.0",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3"

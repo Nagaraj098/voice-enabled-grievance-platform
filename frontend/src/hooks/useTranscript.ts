@@ -7,6 +7,8 @@ export function useTranscript() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isThinking, setIsThinking] = useState(false);
   const [audio, setAudio] = useState<string | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -72,6 +74,8 @@ export function useTranscript() {
 
     ws.onopen = () => {
       console.log("WS connected");
+      setIsConnected(true);
+      setError(null);
     };
 
     ws.onmessage = (event) => {
@@ -120,12 +124,15 @@ export function useTranscript() {
       }
     };
 
-    ws.onerror = () => {
-      console.log("WS error");
+    ws.onerror = (e) => {
+      console.log("WS error", e);
+      setError("WebSocket connection failed");
+      setIsConnected(false);
     };
 
     ws.onclose = () => {
       console.log("WS closed");
+      setIsConnected(false);
       wsRef.current = null;
     };
 
@@ -135,5 +142,5 @@ export function useTranscript() {
     };
   }, [USE_MOCK]);
 
-  return { messages, isThinking, audio };
+  return { messages, isThinking, audio, isConnected: USE_MOCK ? true : isConnected, error };
 }
