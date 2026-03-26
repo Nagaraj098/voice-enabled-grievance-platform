@@ -28,4 +28,4 @@ async def websocket_endpoint(websocket: WebSocket):
             # Keep connection alive
             await websocket.receive_text()
     except:
-        manager.disconnect(websocket)
+        print("Transcript WebSocket closed")
