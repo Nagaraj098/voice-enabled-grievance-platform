@@ -3,6 +3,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import asyncio
 import numpy as np
+import requests
 
 from livekit import rtc
 from livekit.api import AccessToken, VideoGrants
@@ -10,24 +11,36 @@ from livekit.api import AccessToken, VideoGrants
 from agent.audio_buffer import AudioBuffer
 from services.stt_service import STTService
 from services.llm_service import generate_response
-from sockets.connection_manager import manager
 
 # 🔐 LiveKit Config
 LIVEKIT_URL = "ws://localhost:7880"
 API_KEY = "devkey"
 API_SECRET = "supersecretkeysupersecretkey1234567890abcd"
-ROOM_NAME = "testroom"
+ROOM_NAME = "voice-room"   # ✅ must match token.py
 IDENTITY = "ai-agent"
 
-LIVEKIT_SAMPLE_RATE = 48000   # LiveKit default
-WHISPER_SAMPLE_RATE = 16000   # Whisper expects this
+LIVEKIT_SAMPLE_RATE = 48000
+WHISPER_SAMPLE_RATE = 16000
+
+FASTAPI_URL = "http://localhost:8000"
 
 buffer = AudioBuffer()
 stt = STTService()
 
 
+# ✅ HTTP broadcast — posts to FastAPI which forwards to frontend WebSocket
+def broadcast(data: dict):
+    try:
+        requests.post(
+            f"{FASTAPI_URL}/internal/broadcast",
+            json=data,
+            timeout=5
+        )
+    except Exception as e:
+        print(f"❌ Broadcast error: {e}")
+
+
 def resample(pcm: np.ndarray, orig_sr: int, target_sr: int) -> np.ndarray:
-    """Simple linear resample from orig_sr to target_sr."""
     if orig_sr == target_sr:
         return pcm
     ratio = target_sr / orig_sr
@@ -55,21 +68,26 @@ async def process_audio(track):
             if buffer.is_ready():
                 audio_bytes = buffer.get_audio()
 
-                # ✅ STT
+                # 🔥 STT
                 text = stt.transcribe(audio_bytes, sample_rate=WHISPER_SAMPLE_RATE)
                 if not text:
                     continue
 
                 print(f"🗣 User: {text}")
-                await manager.broadcast({"type": "user_transcript", "text": text})
+                broadcast({"type": "user_transcript", "text": text})
 
-                # ✅ LLM
+                # ✅ Tell frontend AI is thinking
+                broadcast({"type": "agent_thinking"})
+
+                # 🔥 LLM
                 ai_response = generate_response(text)
                 print(f"🤖 AI: {ai_response}")
-                await manager.broadcast({"type": "ai_response", "text": ai_response})
+                broadcast({"type": "ai_response", "text": ai_response})
 
         except Exception as e:
             print("❌ Audio Processing Error:", e)
+            import traceback
+            traceback.print_exc()
 
 
 async def main():
@@ -88,7 +106,7 @@ async def main():
     )
 
     await room.connect(LIVEKIT_URL, token)
-    print("✅ Agent connected to LiveKit room")
+    print(f"✅ Agent connected to LiveKit room: {ROOM_NAME}")
 
     @room.on("track_subscribed")
     def on_track(track, publication, participant):
