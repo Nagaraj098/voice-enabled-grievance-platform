@@ -8,8 +8,8 @@ class AudioBuffer:
 
         # Tunable thresholds
         self.VOLUME_THRESHOLD = 20       # adjust per mic environment
-        self.MIN_AUDIO_LEN = sample_rate // 2   # 0.5 sec minimum speech
-        self.SILENCE_LIMIT = 6           # frames of silence before triggering
+        self.MIN_AUDIO_LEN = sample_rate    # 1 sec minimum speech
+        self.SILENCE_LIMIT = 10           # frames of silence before triggering
         self.MAX_AUDIO_LEN = sample_rate * 15   # ✅ 15 sec max — prevent memory bloat
 
     def is_speech(self, pcm: np.ndarray) -> bool:

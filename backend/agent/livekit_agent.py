@@ -16,7 +16,7 @@ from services.llm_service import generate_response
 LIVEKIT_URL = "ws://localhost:7880"
 API_KEY = "devkey"
 API_SECRET = "supersecretkeysupersecretkey1234567890abcd"
-ROOM_NAME = "voice-room"   # ✅ must match token.py
+ROOM_NAME = "voice-room"
 IDENTITY = "ai-agent"
 
 LIVEKIT_SAMPLE_RATE = 48000
@@ -24,11 +24,22 @@ WHISPER_SAMPLE_RATE = 16000
 
 FASTAPI_URL = "http://localhost:8000"
 
+# ✅ Junk phrases Whisper hallucinates during silence
+JUNK_PHRASES = [
+    "thanks for watching",
+    "thank you for watching",
+    "please subscribe",
+    "like and subscribe",
+    "bye bye",
+    "see you next time",
+    "don't forget to subscribe",
+    "thank you for listening",
+]
+
 buffer = AudioBuffer()
 stt = STTService()
 
 
-# ✅ HTTP broadcast — posts to FastAPI which forwards to frontend WebSocket
 def broadcast(data: dict):
     try:
         requests.post(
@@ -52,6 +63,26 @@ def resample(pcm: np.ndarray, orig_sr: int, target_sr: int) -> np.ndarray:
     ).astype(np.int16)
 
 
+def is_valid_transcript(text: str) -> bool:
+    """Filter out junk Whisper hallucinations."""
+    if not text or not text.strip():
+        return False
+
+    # ✅ Ignore single word responses
+    if len(text.split()) < 2:
+        print(f"⚠️ Too short, ignoring: {text}")
+        return False
+
+    # ✅ Ignore known hallucinated phrases
+    text_lower = text.lower().strip()
+    for junk in JUNK_PHRASES:
+        if junk in text_lower:
+            print(f"⚠️ Filtered junk: {text}")
+            return False
+
+    return True
+
+
 async def process_audio(track):
     print("🎧 Processing audio stream...")
     audio_stream = rtc.AudioStream(track)
@@ -70,7 +101,9 @@ async def process_audio(track):
 
                 # 🔥 STT
                 text = stt.transcribe(audio_bytes, sample_rate=WHISPER_SAMPLE_RATE)
-                if not text:
+
+                # ✅ Validate transcript before sending
+                if not is_valid_transcript(text):
                     continue
 
                 print(f"🗣 User: {text}")
