@@ -11,6 +11,7 @@ from livekit.api import AccessToken, VideoGrants
 from agent.audio_buffer import AudioBuffer
 from services.stt_service import STTService
 from services.llm_service import generate_response
+from services.tts_service import TTSService
 
 # 🔐 LiveKit Config
 LIVEKIT_URL = "ws://localhost:7880"
@@ -38,6 +39,7 @@ JUNK_PHRASES = [
 
 buffer = AudioBuffer()
 stt = STTService()
+tts = TTSService()  # ✅ TTS service
 
 
 def broadcast(data: dict):
@@ -64,22 +66,16 @@ def resample(pcm: np.ndarray, orig_sr: int, target_sr: int) -> np.ndarray:
 
 
 def is_valid_transcript(text: str) -> bool:
-    """Filter out junk Whisper hallucinations."""
     if not text or not text.strip():
         return False
-
-    # ✅ Ignore single word responses
     if len(text.split()) < 2:
         print(f"⚠️ Too short, ignoring: {text}")
         return False
-
-    # ✅ Ignore known hallucinated phrases
     text_lower = text.lower().strip()
     for junk in JUNK_PHRASES:
         if junk in text_lower:
             print(f"⚠️ Filtered junk: {text}")
             return False
-
     return True
 
 
@@ -90,32 +86,37 @@ async def process_audio(track):
     async for frame in audio_stream:
         try:
             pcm = np.frombuffer(frame.frame.data, dtype=np.int16)
-
-            # ✅ Resample 48kHz → 16kHz for Whisper
             pcm_16k = resample(pcm, LIVEKIT_SAMPLE_RATE, WHISPER_SAMPLE_RATE)
-
             buffer.add_frame(pcm_16k)
 
             if buffer.is_ready():
                 audio_bytes = buffer.get_audio()
 
-                # 🔥 STT
+                # 🔥 STEP 1: STT
                 text = stt.transcribe(audio_bytes, sample_rate=WHISPER_SAMPLE_RATE)
-
-                # ✅ Validate transcript before sending
                 if not is_valid_transcript(text):
                     continue
 
                 print(f"🗣 User: {text}")
                 broadcast({"type": "user_transcript", "text": text})
 
-                # ✅ Tell frontend AI is thinking
+                # 🔥 STEP 2: Thinking indicator
                 broadcast({"type": "agent_thinking"})
 
-                # 🔥 LLM
+                # 🔥 STEP 3: LLM
                 ai_response = generate_response(text)
                 print(f"🤖 AI: {ai_response}")
+
+                # 🔥 STEP 4: Broadcast text response
                 broadcast({"type": "ai_response", "text": ai_response})
+
+                # 🔥 STEP 5: TTS — convert response to speech
+                print("🔊 Generating TTS...")
+                audio_b64 = tts.synthesize(ai_response)
+
+                if audio_b64:
+                    broadcast({"type": "agent_audio", "audio": audio_b64})
+                    print("✅ Audio sent to frontend")
 
         except Exception as e:
             print("❌ Audio Processing Error:", e)

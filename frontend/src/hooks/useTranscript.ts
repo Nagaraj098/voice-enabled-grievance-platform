@@ -3,20 +3,46 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Message } from "@/types/chat";
 
-const WS_URL = "ws://localhost:8000/ws/transcript"; // ✅ localhost not 127.0.0.1
+const WS_URL = "ws://localhost:8000/ws/transcript";
 const RETRY_DELAY_MS = 3000;
 
 export function useTranscript() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isThinking, setIsThinking] = useState(false);
-  const [audio, setAudio] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const wsRef = useRef<WebSocket | null>(null);
   const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === "true";
+
+  // ── Play base64 audio ────────────────────────────────────────────────────
+  const playAudio = useCallback((base64Audio: string) => {
+    try {
+      // ✅ Stop any currently playing audio
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+
+      const audio = new Audio(`data:audio/mp3;base64,${base64Audio}`);
+      audioRef.current = audio;
+
+      audio.play().catch((err) => {
+        console.warn("Audio play failed:", err);
+      });
+
+      audio.onended = () => {
+        audioRef.current = null;
+        console.log("✅ Audio finished playing");
+      };
+
+    } catch (err) {
+      console.error("Audio playback error:", err);
+    }
+  }, []);
 
   // ── Mock mode ────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -41,7 +67,7 @@ export function useTranscript() {
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [USE_MOCK]);
 
-  // ── WebSocket mode ────────────────────────────────────────────────────────
+  // ── WebSocket ─────────────────────────────────────────────────────────────
   const connect = useCallback(() => {
     if (USE_MOCK) return;
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
@@ -59,8 +85,10 @@ export function useTranscript() {
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        console.log("📨 WS message:", data.type);
 
         switch (data.type) {
+
           case "user_transcript":
             setMessages((prev) => [...prev, {
               id: crypto.randomUUID(),
@@ -74,7 +102,7 @@ export function useTranscript() {
             setIsThinking(true);
             break;
 
-          // ✅ Fixed: backend sends "ai_response" not "agent_response"
+          // ✅ handles both ai_response and agent_response
           case "ai_response":
           case "agent_response":
             setIsThinking(false);
@@ -86,12 +114,16 @@ export function useTranscript() {
             }]);
             break;
 
+          // ✅ Play TTS audio from backend
           case "agent_audio":
-            setAudio(data.audio);
+            if (data.audio) {
+              console.log("🔊 Playing TTS audio...");
+              playAudio(data.audio);
+            }
             break;
 
           default:
-            console.log("Unknown WS event:", data.type, data);
+            console.log("Unknown WS event:", data.type);
         }
       } catch (err) {
         console.error("Invalid WS message:", err);
@@ -108,23 +140,26 @@ export function useTranscript() {
       console.log("WS closed — retrying in 3s");
       setIsConnected(false);
       wsRef.current = null;
-      // ✅ Auto reconnect
       retryRef.current = setTimeout(connect, RETRY_DELAY_MS);
     };
-  }, [USE_MOCK]);
+  }, [USE_MOCK, playAudio]);
 
   useEffect(() => {
     connect();
     return () => {
       wsRef.current?.close();
       if (retryRef.current) clearTimeout(retryRef.current);
+      // Stop audio on unmount
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
     };
   }, [connect]);
 
   return {
     messages,
     isThinking,
-    audio,
     isConnected: USE_MOCK ? true : isConnected,
     error,
   };

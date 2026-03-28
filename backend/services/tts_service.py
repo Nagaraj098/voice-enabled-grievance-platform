@@ -1,14 +1,37 @@
-from gtts import gTTS
-import tempfile
+import base64
+import io
+import requests
 
-def text_to_speech(text):
+# Kokoro TTS via OpenRouter-compatible API (free)
+# Alternative: use kokoro python package directly
 
-    # create temporary audio file
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp:
-        file_path = temp.name
+class TTSService:
+    def __init__(self):
+        # We'll use Kokoro via huggingface inference API
+        # or fallback to gTTS which is always free
+        self.use_gtts = True  # reliable fallback
 
-    # generate speech
-    tts = gTTS(text=text, lang="en")
-    tts.save(file_path)
+    def synthesize(self, text: str) -> str:
+        """Convert text to speech, return base64 encoded audio string."""
+        try:
+            if self.use_gtts:
+                return self._gtts(text)
+        except Exception as e:
+            print(f"❌ TTS Error: {e}")
+            return ""
 
-    return file_path
+    def _gtts(self, text: str) -> str:
+        """Use gTTS (Google Text to Speech) — free, no API key needed."""
+        from gtts import gTTS
+
+        tts = gTTS(text=text, lang="en", slow=False)
+
+        buf = io.BytesIO()
+        tts.write_to_fp(buf)
+        buf.seek(0)
+
+        audio_bytes = buf.read()
+        encoded = base64.b64encode(audio_bytes).decode("utf-8")
+
+        print(f"✅ TTS generated: {len(audio_bytes)} bytes")
+        return encoded
