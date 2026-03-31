@@ -14,6 +14,22 @@ type SummaryData = {
   duration?: string;
 };
 
+// ✅ Retry fetching summary — backend may take a few seconds to save
+async function fetchWithRetry(
+  url: string,
+  retries: number = 8,
+  delayMs: number = 1500
+): Promise<Response> {
+  for (let i = 0; i < retries; i++) {
+    const res = await fetch(url);
+    if (res.ok) return res;
+
+    console.log(`⏳ Summary not ready yet, retrying... (${i + 1}/${retries})`);
+    await new Promise((r) => setTimeout(r, delayMs));
+  }
+  throw new Error("Summary not available after multiple retries");
+}
+
 function SummaryContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -22,6 +38,7 @@ function SummaryContent() {
   const [data, setData] = useState<SummaryData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     if (!sessionId) {
@@ -32,15 +49,24 @@ function SummaryContent() {
 
     const fetchSummary = async () => {
       try {
-        const res = await fetch(
-          `http://localhost:8000/summary/${sessionId}`
+        setLoading(true);
+        setError(null);
+
+        // ✅ Wait 2 seconds first — give backend time to save
+        await new Promise((r) => setTimeout(r, 2000));
+
+        const res = await fetchWithRetry(
+          `http://localhost:8000/summary/${sessionId}`,
+          8,    // retry up to 8 times
+          1500  // 1.5 seconds between retries
         );
-        if (!res.ok) throw new Error(`Failed to fetch summary: ${res.status}`);
+
         const json = await res.json();
         setData(json);
+
       } catch (err: any) {
         console.error(err);
-        setError(err.message || "Failed to load summary");
+        setError("Summary is still being generated. Please wait a moment and refresh.");
       } finally {
         setLoading(false);
       }
@@ -52,9 +78,10 @@ function SummaryContent() {
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-center space-y-3">
+        <div className="text-center space-y-4">
           <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-zinc-500 text-sm">Loading summary...</p>
+          <p className="text-zinc-400 text-sm">Generating your summary...</p>
+          <p className="text-zinc-600 text-xs">This may take a few seconds</p>
         </div>
       </div>
     );
@@ -64,6 +91,12 @@ function SummaryContent() {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-4">
         <p className="text-red-400 text-sm">{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-500 transition-colors"
+        >
+          🔄 Retry
+        </button>
         <button
           onClick={() => router.push("/home")}
           className="px-5 py-2 bg-zinc-800 text-zinc-300 rounded-lg text-sm hover:bg-zinc-700 transition-colors"
@@ -91,9 +124,9 @@ function SummaryContent() {
       {/* Stats */}
       <div className="w-full max-w-2xl grid grid-cols-3 gap-4 mb-8">
         {[
-          { label: "Duration", value: data?.duration || "—", color: "text-blue-400" },
-          { label: "Messages", value: data?.messages?.length || 0, color: "text-violet-400" },
-          { label: "Status", value: data?.resolution_status || "—", color: "text-emerald-400" },
+          { label: "Duration",  value: data?.duration || "—",                color: "text-blue-400"    },
+          { label: "Messages",  value: data?.messages?.length || 0,          color: "text-violet-400"  },
+          { label: "Status",    value: data?.resolution_status || "—",       color: "text-emerald-400" },
         ].map((stat, i) => (
           <div key={i} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center">
             <p className={`text-xl font-semibold ${stat.color}`}>{stat.value}</p>

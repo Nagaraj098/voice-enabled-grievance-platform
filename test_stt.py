@@ -1,6 +1,6 @@
 import requests
 
-url = "https://advanced-appears-wav-images.trycloudflare.com/transcribe"
+url = "https://zen-contract-possibilities-dishes.trycloudflare.com/transcribe"
 
 with open(r"D:\Internship\grievance project\Voice_enabled_grievance_platform\whisper_test.wav", "rb") as f:
     response = requests.post(url, files={"audio": f})
