@@ -11,7 +11,7 @@ export default function Sidebar({ activePage = "home" }: { activePage?: string }
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
           <span className="text-white font-bold text-sm">V</span>
         </div>
-        <span className="font-semibold text-zinc-100 text-base tracking-tight">Voice AI</span>
+        <span className="font-semibold text-zinc-100 text-base tracking-tight">GRS</span>
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-6 scrollbar-hide">
