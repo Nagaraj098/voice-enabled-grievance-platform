@@ -1,0 +1,35 @@
+{
+  "issue_category": "Water Supply",
+  "severity": "medium",
+  "description": "The water supply is a regular issue for the user.",
+  "resolution_status": "Registered",
+  "user_name": "Unknown",
+  "session_id": "1aec80b8-b122-48dd-9379-d65b86add4f6",
+  "messages": [
+    {
+      "role": "user",
+      "text": "I want to resist and complain to the water monitor."
+    },
+    {
+      "role": "agent",
+      "text": "Thank you for reaching out to us to report an issue. My name is Karen, and I'll be happy to help you register your grievance.\n\nCan you please tell me what the problem is that you're experiencing with the water supply?"
+    },
+    {
+      "role": "user",
+      "text": "I'm a beast, I'm a beast, I'm a beast, I'm a beast."
+    },
+    {
+      "role": "agent",
+      "text": "I'm here to help you with your issue, and I assure you that I'm listening attentively. However, I'm not quite sure what you're trying to communicate through your repeated phrase \"I'm a beast, I'm a beast, I'm a beast, I'm a beast.\" Could you please help me understand what's going on and what's bothering you?"
+    },
+    {
+      "role": "user",
+      "text": "regularly supplied regularly supplied"
+    },
+    {
+      "role": "agent",
+      "text": "It seems like you're trying to say that the water supply is a regular issue for you. Can you please tell me what exactly is happening with the water supply that's causing you inconvenience? Is it related to the quality, quantity, or pressure of the water?"
+    }
+  ],
+  "duration": "1m 51s"
+}

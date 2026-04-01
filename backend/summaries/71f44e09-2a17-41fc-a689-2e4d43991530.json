@@ -1,0 +1,27 @@
+{
+  "issue_category": "Water Supply",
+  "severity": "high",
+  "description": "Irregular water supply has been ongoing for about a week.",
+  "resolution_status": "Registered",
+  "user_name": "Unknown",
+  "session_id": "71f44e09-2a17-41fc-a689-2e4d43991530",
+  "messages": [
+    {
+      "role": "user",
+      "text": "I have water crisis in my area."
+    },
+    {
+      "role": "agent",
+      "text": "I'm so sorry to hear that you're experiencing a water crisis in your area. Can you please tell me more about the issue? When did you first notice the problem with the water supply? Was it yesterday, a few days ago, or has it been ongoing for a while?"
+    },
+    {
+      "role": "user",
+      "text": "It seems a week and it is irregularly supplied"
+    },
+    {
+      "role": "agent",
+      "text": "I understand how frustrating and inconvenient that must be for you and your family. A week is a long time to go without a reliable water supply, and it's especially challenging when it's irregular. It's like living with a constant uncertainty about when you'll have access to this essential resource.\n\nLet me confirm what you've shared: you're experiencing an irregular water supply, and it's been going on for about a week. Is that correct? And has the water supply been completely cut off, or is it just reduced in some way?"
+    }
+  ],
+  "duration": "1m 3s"
+}

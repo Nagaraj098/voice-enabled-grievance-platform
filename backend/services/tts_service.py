@@ -1,37 +1,58 @@
 import base64
 import io
-import requests
+import asyncio
+import edge_tts
 
-# Kokoro TTS via OpenRouter-compatible API (free)
-# Alternative: use kokoro python package directly
 
 class TTSService:
     def __init__(self):
-        # We'll use Kokoro via huggingface inference API
-        # or fallback to gTTS which is always free
-        self.use_gtts = True  # reliable fallback
+        self.voice = "en-IN-NeerjaNeural"
 
     def synthesize(self, text: str) -> str:
-        """Convert text to speech, return base64 encoded audio string."""
+        """Sync version — do not use inside async functions."""
         try:
-            if self.use_gtts:
-                return self._gtts(text)
+            print(f"🔊 Generating TTS...")
+            result = asyncio.run(self._edge_tts(text))
+            if result:
+                print(f"✅ TTS generated: {len(result)} chars")
+            else:
+                print("⚠️ TTS returned empty")
+            return result
         except Exception as e:
+            import traceback
             print(f"❌ TTS Error: {e}")
+            traceback.print_exc()
             return ""
 
-    def _gtts(self, text: str) -> str:
-        """Use gTTS (Google Text to Speech) — free, no API key needed."""
-        from gtts import gTTS
+    async def synthesize_async(self, text: str) -> str:
+        """✅ Async version — use this inside async functions like process_audio."""
+        try:
+            print(f"🔊 Generating TTS (async)...")
+            result = await self._edge_tts(text)
+            if result:
+                print(f"✅ TTS generated: {len(result)} chars")
+            else:
+                print("⚠️ TTS returned empty")
+            return result
+        except Exception as e:
+            import traceback
+            print(f"❌ TTS Error: {e}")
+            traceback.print_exc()
+            return ""
 
-        tts = gTTS(text=text, lang="en", slow=False)
-
+    async def _edge_tts(self, text: str) -> str:
+        communicate = edge_tts.Communicate(text, self.voice)
         buf = io.BytesIO()
-        tts.write_to_fp(buf)
+
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                buf.write(chunk["data"])
+
         buf.seek(0)
-
         audio_bytes = buf.read()
-        encoded = base64.b64encode(audio_bytes).decode("utf-8")
 
-        print(f"✅ TTS generated: {len(audio_bytes)} bytes")
-        return encoded
+        if not audio_bytes:
+            print("⚠️ No audio bytes generated")
+            return ""
+
+        return base64.b64encode(audio_bytes).decode("utf-8")

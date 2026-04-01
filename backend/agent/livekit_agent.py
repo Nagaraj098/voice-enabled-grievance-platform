@@ -79,7 +79,6 @@ def is_valid_transcript(text: str) -> bool:
 
 
 def generate_summary(session, duration_seconds: int) -> dict:
-    """Ask LLM to summarize the session — fields match frontend SummaryData type."""
     try:
         history_text = "\n".join(
             [f"{m['role'].upper()}: {m['content']}" for m in session.history]
@@ -112,8 +111,6 @@ Respond ONLY with valid JSON. No markdown, no explanation."""
         response = requests.post(url, headers=headers, json=payload, timeout=15)
         data = response.json()
         text = data["choices"][0]["message"]["content"].strip()
-
-        # Clean JSON fences if present
         text = text.replace("```json", "").replace("```", "").strip()
         summary = json.loads(text)
 
@@ -127,10 +124,7 @@ Respond ONLY with valid JSON. No markdown, no explanation."""
             "user_name": "Unknown",
         }
 
-    # ✅ Add fields frontend needs
     summary["session_id"] = session.session_id
-
-    # ✅ Convert history to messages format frontend expects
     summary["messages"] = [
         {
             "role": "user" if m["role"] == "user" else "agent",
@@ -139,7 +133,6 @@ Respond ONLY with valid JSON. No markdown, no explanation."""
         for m in session.history
     ]
 
-    # ✅ Format duration as "X min Y sec"
     mins = duration_seconds // 60
     secs = duration_seconds % 60
     summary["duration"] = f"{mins}m {secs}s" if mins > 0 else f"{secs}s"
@@ -154,17 +147,25 @@ def save_summary(session_id: str, summary: dict):
     print(f"✅ Summary saved: {path}")
 
 
-async def process_audio(track, session_id: str):
+async def process_audio(track, session_id: str, stop_event: asyncio.Event):
     print("🎧 Processing audio stream...")
     audio_stream = rtc.AudioStream(track)
 
     async for frame in audio_stream:
+        # ✅ Stop processing when participant disconnects
+        if stop_event.is_set():
+            print("🛑 Stopping audio processing")
+            break
+
         try:
             pcm = np.frombuffer(frame.frame.data, dtype=np.int16)
             pcm_16k = resample(pcm, LIVEKIT_SAMPLE_RATE, WHISPER_SAMPLE_RATE)
             buffer.add_frame(pcm_16k)
 
             if buffer.is_ready():
+                if stop_event.is_set():
+                    break
+
                 audio_bytes = buffer.get_audio()
 
                 # 🔥 STEP 1: STT
@@ -178,18 +179,16 @@ async def process_audio(track, session_id: str):
                 if not session:
                     continue
 
-                # ✅ Add to history
                 session.add_message("user", text)
                 broadcast({"type": "user_transcript", "text": text})
 
-                # ✅ Advance stage
                 session.stage = get_next_stage(session.stage, text)
                 print(f"📍 Stage: {session.stage.value}")
 
                 # 🔥 STEP 2: Thinking
                 broadcast({"type": "agent_thinking"})
 
-                # 🔥 STEP 3: LLM with full history + stage
+                # 🔥 STEP 3: LLM
                 ai_response = generate_response(
                     user_message=text,
                     history=session.history[:-1],
@@ -200,11 +199,11 @@ async def process_audio(track, session_id: str):
                 session.add_message("assistant", ai_response)
                 broadcast({"type": "ai_response", "text": ai_response})
 
-                # 🔥 STEP 4: TTS
-                audio_b64 = tts.synthesize(ai_response)
+                # 🔥 STEP 4: TTS — ✅ using async version directly
+                audio_b64 = await tts.synthesize_async(ai_response)
                 if audio_b64:
                     broadcast({"type": "agent_audio", "audio": audio_b64})
-                    print("✅ Audio sent")
+                    print("✅ Audio sent to frontend")
 
         except Exception as e:
             print("❌ Audio Processing Error:", e)
@@ -230,8 +229,8 @@ async def main():
     await room.connect(LIVEKIT_URL, token)
     print(f"✅ Agent connected to LiveKit room: {ROOM_NAME}")
 
-    # Track session start times for duration calculation
     session_start_times = {}
+    stop_events = {}  # ✅ track stop events per participant
 
     @room.on("track_subscribed")
     def on_track(track, publication, participant):
@@ -239,21 +238,25 @@ async def main():
         if track.kind == rtc.TrackKind.KIND_AUDIO:
             session = store.create_session()
             session_start_times[participant.identity] = time.time()
+            stop_event = asyncio.Event()
+            stop_events[participant.identity] = stop_event
             print(f"📝 Session: {session.session_id}")
-
-            # ✅ Send session_id to frontend
             broadcast({"type": "session_id", "session_id": session.session_id})
-            asyncio.create_task(process_audio(track, session.session_id))
+            asyncio.create_task(process_audio(track, session.session_id, stop_event))
 
     @room.on("participant_disconnected")
     def on_disconnect(participant):
         print(f"👋 Participant disconnected: {participant.identity}")
 
-        # ✅ Find and summarize session on disconnect
+        # ✅ Stop audio processing immediately
+        if participant.identity in stop_events:
+            stop_events[participant.identity].set()
+            del stop_events[participant.identity]
+            print(f"🛑 Audio processing stopped for: {participant.identity}")
+
         start_time = session_start_times.pop(participant.identity, None)
         duration_seconds = int(time.time() - start_time) if start_time else 0
 
-        # Find the most recent session (simple approach)
         all_sessions = store.get_all_sessions()
         if all_sessions:
             latest = all_sessions[-1]
@@ -262,13 +265,11 @@ async def main():
                 print("📋 Generating summary...")
                 summary = generate_summary(session, duration_seconds)
                 save_summary(session.session_id, summary)
-
-                # ✅ Broadcast summary ready to frontend
                 broadcast({
                     "type": "summary_ready",
                     "session_id": session.session_id
                 })
-                print(f"✅ Summary ready for session: {session.session_id}")
+                print(f"✅ Summary ready: {session.session_id}")
 
 
 async def start():

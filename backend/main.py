@@ -83,3 +83,9 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.receive_text()
     except:
         manager.disconnect(websocket)
+
+@app.post("/session/stop")
+async def stop_session():
+    """Called when user clicks End Call — stops processing."""
+    await manager.broadcast({"type": "session_stopped"})
+    return {"ok": True}
