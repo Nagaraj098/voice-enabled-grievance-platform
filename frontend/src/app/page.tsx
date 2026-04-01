@@ -56,7 +56,7 @@ export default function Home() {
   }, [slides.length]);
 
   return (
-    <div className="min-h-screen bg-[#000000] text-white selection:bg-white/20 font-sans overflow-x-hidden relative">
+    <div className="min-h-screen bg-[#000000] text-white selection:bg-white/20 font-sans relative">
       {/* Background Soft Glows */}
       <div className="absolute top-[-10%] left-[10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] mix-blend-screen pointer-events-none" />
       <div className="absolute top-[20%] right-[-5%] w-[400px] h-[400px] bg-orange-500/20 rounded-full blur-[120px] mix-blend-screen pointer-events-none" />
