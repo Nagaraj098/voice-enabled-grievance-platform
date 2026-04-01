@@ -2,7 +2,7 @@
 import { useState, useRef } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import Topbar from "@/components/layout/Topbar";
-import { Globe, FileText, Type, Folder, Search, X, File, Upload } from "lucide-react";
+import { Globe, FileText, Search, X, File, Upload, Database } from "lucide-react";
 
 type Doc = {
   id: string;
@@ -16,10 +16,11 @@ export default function KnowledgeBase() {
   const [docs, setDocs] = useState<Doc[]>([]);
   const [search, setSearch] = useState("");
   const [showUrlModal, setShowUrlModal] = useState(false);
-  const [showTextModal, setShowTextModal] = useState(false);
+  
+  const [showDbModal, setShowDbModal] = useState(false);
+  const [dbConfig, setDbConfig] = useState({ host: "", port: "", name: "", user: "", password: "" });
+  
   const [urlInput, setUrlInput] = useState("");
-  const [textInput, setTextInput] = useState("");
-  const [textTitle, setTextTitle] = useState("");
   const [dragging, setDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -49,18 +50,6 @@ export default function KnowledgeBase() {
     setShowUrlModal(false);
   };
 
-  const handleAddText = () => {
-    if (!textTitle.trim()) return;
-    addDoc({ name: textTitle, type: "text" });
-    setTextTitle("");
-    setTextInput("");
-    setShowTextModal(false);
-  };
-
-  const handleAddFolder = () => {
-    addDoc({ name: "New Folder", type: "folder" });
-  };
-
   const removeDoc = (id: string) => {
     setDocs(prev => prev.filter(d => d.id !== id));
   };
@@ -72,8 +61,7 @@ export default function KnowledgeBase() {
   const typeIcon = (type: Doc["type"]) => {
     if (type === "url") return <Globe size={16} className="text-blue-400" />;
     if (type === "file") return <File size={16} className="text-violet-400" />;
-    if (type === "text") return <Type size={16} className="text-amber-400" />;
-    return <Folder size={16} className="text-emerald-400" />;
+    return <Database size={16} className="text-emerald-400" />;
   };
 
   return (
@@ -93,12 +81,11 @@ export default function KnowledgeBase() {
           </div>
 
           {/* Action Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
             {[
               { icon: <Globe size={20} className="text-blue-400" />, label: "Add URL", bg: "bg-blue-500/10 border-blue-500/20 hover:bg-blue-500/20", onClick: () => setShowUrlModal(true) },
               { icon: <Upload size={20} className="text-violet-400" />, label: "Add Files", bg: "bg-violet-500/10 border-violet-500/20 hover:bg-violet-500/20", onClick: () => fileRef.current?.click() },
-              { icon: <Type size={20} className="text-amber-400" />, label: "Create Text", bg: "bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/20", onClick: () => setShowTextModal(true) },
-              { icon: <Folder size={20} className="text-emerald-400" />, label: "Create Folder", bg: "bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20", onClick: handleAddFolder },
+              { icon: <Database size={20} className="text-emerald-400" />, label: "Connect to DB", bg: "bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20", onClick: () => setShowDbModal(true) },
             ].map((item, i) => (
               <button
                 key={i}
@@ -194,27 +181,82 @@ export default function KnowledgeBase() {
             </div>
           )}
 
-          {/* Text Modal */}
-          {showTextModal && (
+          {/* DB Modal */}
+          {showDbModal && (
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
               <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-                <h2 className="text-base font-semibold text-zinc-100 mb-4">Create Text</h2>
-                <input
-                  value={textTitle}
-                  onChange={e => setTextTitle(e.target.value)}
-                  placeholder="Document title"
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2.5 text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 mb-3"
-                />
-                <textarea
-                  value={textInput}
-                  onChange={e => setTextInput(e.target.value)}
-                  placeholder="Enter your text content..."
-                  rows={4}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2.5 text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 mb-4 resize-none"
-                />
-                <div className="flex gap-3 justify-end">
-                  <button onClick={() => setShowTextModal(false)} className="px-4 py-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors">Cancel</button>
-                  <button onClick={handleAddText} className="px-5 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm rounded-lg font-medium transition-colors">Create</button>
+                <h2 className="text-base font-semibold text-zinc-100 mb-1">Connect to Database</h2>
+                <p className="text-xs text-zinc-500 mb-5">Enter your database connection details</p>
+                
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-zinc-500 mb-1 block">Host</label>
+                      <input
+                        value={dbConfig.host}
+                        onChange={e => setDbConfig(prev => ({ ...prev, host: e.target.value }))}
+                        placeholder="localhost"
+                        className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-zinc-500 mb-1 block">Port</label>
+                      <input
+                        value={dbConfig.port}
+                        onChange={e => setDbConfig(prev => ({ ...prev, port: e.target.value }))}
+                        placeholder="5432"
+                        className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs text-zinc-500 mb-1 block">Database Name</label>
+                    <input
+                      value={dbConfig.name}
+                      onChange={e => setDbConfig(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="my_database"
+                      className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-zinc-500 mb-1 block">Username</label>
+                    <input
+                      value={dbConfig.user}
+                      onChange={e => setDbConfig(prev => ({ ...prev, user: e.target.value }))}
+                      placeholder="postgres"
+                      className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-zinc-500 mb-1 block">Password</label>
+                    <input
+                      type="password"
+                      value={dbConfig.password}
+                      onChange={e => setDbConfig(prev => ({ ...prev, password: e.target.value }))}
+                      placeholder="••••••••"
+                      className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 justify-end mt-5">
+                  <button 
+                    onClick={() => setShowDbModal(false)} 
+                    className="px-4 py-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!dbConfig.host || !dbConfig.name) return;
+                      addDoc({ name: `DB: ${dbConfig.name} @ ${dbConfig.host}`, type: "url" });
+                      setDbConfig({ host: "", port: "", name: "", user: "", password: "" });
+                      setShowDbModal(false);
+                    }}
+                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm rounded-lg font-medium transition-colors"
+                  >
+                    Connect
+                  </button>
                 </div>
               </div>
             </div>

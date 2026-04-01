@@ -212,6 +212,18 @@ export default function VoiceLayout() {
   const [room, setRoom]                 = useState<Room | null>(null);
   const [livekitError, setLivekitError] = useState<string | null>(null);
 
+  const [connectStatus, setConnectStatus] = useState<
+    'idle' | 'connecting' | 'connected' | 'error'
+  >('idle');
+
+  const [connectMsg, setConnectMsg] = useState(0);
+  const connectMessages = [
+    "Connecting with Agent...",
+    "Setting up your session...",
+    "Initializing voice pipeline...",
+    "Almost ready...",
+  ];
+
   const router = useRouter();
 
   const { level, error: micError }              = useAudioLevel(active);
@@ -222,12 +234,31 @@ export default function VoiceLayout() {
     setMounted(true);
   }, []);
 
+<<<<<<< HEAD
   // ── Start streaming ──────────────────────────────────────────────────
+=======
+  useEffect(() => {
+    if (connectStatus !== 'connecting') return;
+    const interval = setInterval(() => {
+      setConnectMsg(prev => (prev + 1) % connectMessages.length);
+    }, 1500);
+    return () => clearInterval(interval);
+  }, [connectStatus]);
+
+  // ── Start / Stop LiveKit stream ────────────────────────────────────────
+>>>>>>> acc15cf9f43c07225830c61f62d33d9fd7a681a0
   const handleToggle = async () => {
     const newState = !active;
 
     if (newState) {
+<<<<<<< HEAD
+=======
+      // Only allow starting if idle
+      if (connectStatus === 'connecting') return;
+
+>>>>>>> acc15cf9f43c07225830c61f62d33d9fd7a681a0
       try {
+        setConnectStatus('connecting');
         setLivekitError(null);
 
         const res = await fetch(
@@ -240,14 +271,21 @@ export default function VoiceLayout() {
 
         setRoom(newRoom);
         setActive(true);
+        setConnectStatus('connected');
         startSession?.();
 
       } catch (err: any) {
         console.error("LiveKit connect error:", err);
         setLivekitError(err.message || "Failed to start call");
+        setConnectStatus('error');
       }
 
     } else {
+<<<<<<< HEAD
+=======
+      // Only show end call modal if already connected
+      if (connectStatus !== 'connected') return;
+>>>>>>> acc15cf9f43c07225830c61f62d33d9fd7a681a0
       setShowModal(true);
     }
   };
@@ -255,6 +293,7 @@ export default function VoiceLayout() {
   // ── End call ─────────────────────────────────────────────────────────
   const handleConfirmEnd = async () => {
     setShowModal(false);
+<<<<<<< HEAD
 
     // ✅ Stop backend STT/TTS processing
     try {
@@ -264,18 +303,25 @@ export default function VoiceLayout() {
     }
 
     // ✅ Disconnect LiveKit — stops mic and audio stream to agent
+=======
+>>>>>>> acc15cf9f43c07225830c61f62d33d9fd7a681a0
     if (room) {
       await room.disconnect();
       setRoom(null);
     }
-
     setActive(false);
+    setConnectStatus('idle');
     endSession?.();
+<<<<<<< HEAD
 
     // ✅ Use wsSessionId from WebSocket (more reliable than useSession)
     const finalSessionId = wsSessionId || sessionId;
     if (finalSessionId) {
       router.push(`/summary?sessionId=${finalSessionId}`);
+=======
+    if (sessionId) {
+      router.push(`/summary?sessionId=${sessionId}`);
+>>>>>>> acc15cf9f43c07225830c61f62d33d9fd7a681a0
     } else {
       router.push("/");
     }
@@ -320,11 +366,27 @@ export default function VoiceLayout() {
           </div>
         )}
 
-        <VoiceOrb level={level} active={active} speaking={speaking} />
+        {connectStatus === 'connecting' && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-black/60 backdrop-blur-sm rounded-xl">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              <div className="text-center space-y-1">
+                <p className="text-zinc-200 text-sm font-medium animate-pulse">
+                  {connectMessages[connectMsg]}
+                </p>
+                <p className="text-zinc-500 text-xs">
+                  Please wait while we set up your session
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <VoiceOrb level={level} active={active} speaking={speaking} connectStatus={connectStatus} />
 
         {active && <CallTimer seconds={seconds} />}
 
-        <VoiceControls active={active} setActive={handleToggle} />
+        <VoiceControls active={active} setActive={handleToggle} connectStatus={connectStatus} />
 
       </div>
 

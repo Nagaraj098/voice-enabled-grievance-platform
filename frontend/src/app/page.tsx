@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const { isSignedIn } = useAuth();
@@ -36,8 +36,27 @@ export default function Home() {
     return () => observer.disconnect();
   }, []);
 
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const slides = [
+    { 
+      title: 'Fast Resolution', 
+      desc: 'Submit grievances in seconds using your voice. AI routes your complaint to the right authority instantly.' 
+    },
+    { 
+      title: 'Secure & Private', 
+      desc: 'End-to-end encrypted sessions ensure your grievance data stays safe and confidential.' 
+    },
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide(prev => (prev + 1) % slides.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [slides.length]);
+
   return (
-    <div className="min-h-screen bg-[#000000] text-white selection:bg-white/20 font-sans overflow-x-hidden relative">
+    <div className="min-h-screen bg-[#000000] text-white selection:bg-white/20 font-sans relative">
       {/* Background Soft Glows */}
       <div className="absolute top-[-10%] left-[10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] mix-blend-screen pointer-events-none" />
       <div className="absolute top-[20%] right-[-5%] w-[400px] h-[400px] bg-orange-500/20 rounded-full blur-[120px] mix-blend-screen pointer-events-none" />
@@ -49,12 +68,12 @@ export default function Home() {
           <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-orange-500 to-blue-600 flex items-center justify-center shadow-lg">
             <div className="w-3 h-3 bg-white rounded-full"></div>
           </div>
-          <span className="text-xl font-medium tracking-tight">AI Voice</span>
+          <span className="text-xl font-medium tracking-tight">GRS</span>
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-400">
-          <Link href="#platform" className="hover:text-white transition-colors">Platform</Link>
-          <Link href="#developers" className="hover:text-white transition-colors">Developers</Link>
-          <Link href="#resources" className="hover:text-white transition-colors">Resources</Link>
+          <Link href="#features" className="hover:text-white transition-colors">Features</Link>
+          <Link href="#about" className="hover:text-white transition-colors">About</Link>
+          <Link href="#contact" className="hover:text-white transition-colors">Contact</Link>
         </div>
         <div className="flex items-center">
           <Link
@@ -72,16 +91,17 @@ export default function Home() {
         <div style={{ animation: 'fade-up 0.9s ease forwards' }}>
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-zinc-300 mb-8 backdrop-blur-md">
             <span className="flex h-2 w-2 rounded-full bg-orange-500 animate-pulse"></span>
-            Next-Generation Voice AI
+            Voice-Powered Grievance Platform
           </div>
-          <h1 className="text-5xl md:text-7xl font-semibold tracking-[-0.02em] leading-[1.1] mb-6 max-w-4xl text-transparent bg-clip-text bg-gradient-to-b from-white to-white/70">
-            AI Voice Platform
+          <h1 className="text-5xl md:text-7xl font-semibold tracking-[-0.02em] leading-[1.1] mb-6 max-w-4xl text-transparent bg-clip-text bg-gradient-to-b from-white to-white/70 mx-auto">
+            Grievance Redressal System
           </h1>
-          <p className="text-lg md:text-xl text-zinc-400 max-w-2xl font-light leading-relaxed mb-10">
-            Build interactive, ultra-low latency conversational AI experiences.
-            Connect your users with intelligent voice agents seamlessly.
+          <p className="text-lg md:text-xl text-zinc-400 max-w-2xl font-light leading-relaxed mb-10 mx-auto">
+            Submit and track your grievances effortlessly using 
+            voice-powered AI. Get real-time updates and resolutions 
+            from the right authorities.
           </p>
-          <div className="flex flex-col sm:flex-row items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
             <Link
               href="/sign-up"
               prefetch={true}
@@ -97,7 +117,7 @@ export default function Home() {
                   mixBlendMode: 'overlay'
                 }}
               />
-              <span className="relative z-10">Get Started</span>
+              <span className="relative z-10">File a Grievance</span>
               <svg className="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
@@ -131,29 +151,45 @@ export default function Home() {
       <section className="bg-white text-black py-24 px-6">
         <div className="max-w-5xl mx-auto">
           <p className="text-center text-xs font-semibold tracking-widest text-zinc-400 uppercase mb-4">
-            For Enterprise · Government · Developers
+            For Citizens · Government · Authorities
           </p>
           <h2 className="text-4xl font-semibold text-center mb-16 tracking-tight">
-            Built for real conversations
+            Built for every citizen
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { title: 'Ultra-low latency', desc: 'Real-time voice streaming with sub-200ms response time using LiveKit WebRTC.' },
-              { title: 'Multilingual AI', desc: 'Voice agents that understand context, intent, and language naturally.' },
-              { title: 'Secure by design', desc: 'End-to-end encrypted sessions with Clerk authentication and role-based access.' },
-            ].map((card, i) => (
+          
+          <div className="scroll-animate relative w-full max-w-xl mx-auto">
+            <div className="overflow-hidden rounded-2xl">
               <div
-                key={i}
-                className="scroll-animate bg-zinc-50 border border-zinc-100 rounded-2xl p-8"
-                style={{ transitionDelay: `${i * 0.15}s` }}
+                className="flex transition-transform duration-700 ease-in-out"
+                style={{ transform: `translateX(-${currentSlide * 100}%)` }}
               >
-                <div className="w-8 h-8 rounded-full bg-black mb-5 flex items-center justify-center">
-                  <div className="w-2.5 h-2.5 bg-white rounded-full" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">{card.title}</h3>
-                <p className="text-zinc-500 text-sm leading-relaxed">{card.desc}</p>
+                {slides.map((card, i) => (
+                  <div
+                    key={i}
+                    className="min-w-full bg-zinc-50 border border-zinc-100 rounded-2xl p-10"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-black mb-5 flex items-center justify-center">
+                      <div className="w-2.5 h-2.5 bg-white rounded-full" />
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2 text-black">{card.title}</h3>
+                    <p className="text-zinc-500 text-sm leading-relaxed">{card.desc}</p>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            {/* Dot indicators */}
+            <div className="flex justify-center gap-2 mt-6">
+              {slides.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentSlide(i)}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    i === currentSlide ? 'bg-black w-6' : 'bg-zinc-300'
+                  }`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>
