@@ -117,7 +117,7 @@ export default function Home() {
                   mixBlendMode: 'overlay'
                 }}
               />
-              <span className="relative z-10">File a Grievance</span>
+              <span className="relative z-10">Start Voice Session</span>
               <svg className="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
