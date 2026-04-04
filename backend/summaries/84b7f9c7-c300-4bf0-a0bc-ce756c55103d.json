@@ -1,0 +1,19 @@
+{
+  "issue_category": "Other",
+  "severity": "medium",
+  "description": "I want to register a complaint.",
+  "resolution_status": "Registered",
+  "user_name": "Unknown",
+  "session_id": "84b7f9c7-c300-4bf0-a0bc-ce756c55103d",
+  "messages": [
+    {
+      "role": "user",
+      "text": "I want to register a complaint."
+    },
+    {
+      "role": "agent",
+      "text": "I'm here to help you with that. Can you please tell me what the problem is that you're experiencing?"
+    }
+  ],
+  "duration": "37s"
+}

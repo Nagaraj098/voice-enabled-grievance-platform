@@ -10,39 +10,60 @@
 // import { useSession } from "@/hooks/useSession";
 // import EndCallModal from "@/components/call/EndCallModal";
 // import { connectToLiveKit } from "@/lib/livekit";
+// import { useTranscript } from "@/hooks/useTranscript";
 // import { Room } from "livekit-client";
 
 // export default function VoiceLayout() {
-//   const [mounted, setMounted]     = useState(false);
-//   const [active, setActive]       = useState(false);
-//   const [speaking, setSpeaking]   = useState(false);
-//   const [showModal, setShowModal] = useState(false);
-//   const [room, setRoom]           = useState<Room | null>(null);
+//   const [mounted, setMounted]           = useState(false);
+//   const [active, setActive]             = useState(false);
+//   const [speaking, setSpeaking]         = useState(false);
+//   const [showModal, setShowModal]       = useState(false);
+//   const [room, setRoom]                 = useState<Room | null>(null);
 //   const [livekitError, setLivekitError] = useState<string | null>(null);
+//   const [connectStatus, setConnectStatus] = useState<
+//     'idle' | 'connecting' | 'connected' | 'error'
+//   >('idle');
+//   const [connectMsg, setConnectMsg] = useState(0);
+
+//   const connectMessages = [
+//     "Connecting with Agent...",
+//     "Setting up your session...",
+//     "Initializing voice pipeline...",
+//     "Almost ready...",
+//   ];
 
 //   const router = useRouter();
 
-//   // ✅ Hooks always called unconditionally — no try/catch wrapper
-//   const { level, error: micError } = useAudioLevel(active);
+//   const { level, error: micError }                       = useAudioLevel(active);
 //   const { seconds, sessionId, startSession, endSession } = useSession();
+//   const { sessionId: wsSessionId }                       = useTranscript();
 
+//   // ── Mount ─────────────────────────────────────────────────────────────
 //   useEffect(() => {
 //     setMounted(true);
 //   }, []);
 
-//   // ── Start / Stop LiveKit stream ────────────────────────────────────────
+//   // ── Rotate connecting messages ────────────────────────────────────────
+//   useEffect(() => {
+//     if (connectStatus !== 'connecting') return;
+//     const interval = setInterval(() => {
+//       setConnectMsg((prev) => (prev + 1) % connectMessages.length);
+//     }, 1500);
+//     return () => clearInterval(interval);
+//   }, [connectStatus]);
+
+//   // ── Start streaming ───────────────────────────────────────────────────
 //   const handleToggle = async () => {
 //     const newState = !active;
 
 //     if (newState) {
-//       // START
 //       try {
+//         setConnectStatus('connecting');
 //         setLivekitError(null);
 
 //         const res = await fetch(
 //           `http://localhost:8000/token?participant_name=user-${Date.now()}`
 //         );
-
 //         if (!res.ok) throw new Error(`Token fetch failed: ${res.status}`);
 
 //         const { token } = await res.json();
@@ -50,51 +71,45 @@
 
 //         setRoom(newRoom);
 //         setActive(true);
+//         setConnectStatus('connected');
 //         startSession?.();
 
 //       } catch (err: any) {
 //         console.error("LiveKit connect error:", err);
 //         setLivekitError(err.message || "Failed to start call");
+//         setConnectStatus('error');
 //       }
 
 //     } else {
-//       // STOP — show confirmation modal
 //       setShowModal(true);
 //     }
 //   };
 
-//   // const handleConfirmEnd = async () => {
-//   //   setShowModal(false);
-
-//   //   // ✅ Clean disconnect
-//   //   if (room) {
-//   //     await disconnectFromLiveKit(room);
-//   //     setRoom(null);
-//   //   }
-
-//   //   setActive(false);
-//   //   endSession?.();
-
-//   //   if (sessionId) {
-//   //     router.push(`/summary?sessionId=${sessionId}`);
-//   //   } else {
-//   //     router.push("/");
-//   //   }
-//   // };
+//   // ── End call ──────────────────────────────────────────────────────────
 //   const handleConfirmEnd = async () => {
 //     setShowModal(false);
 
-//     // ✅ Direct disconnect
+//     // ✅ Stop backend STT/TTS processing
+//     try {
+//       await fetch("http://localhost:8000/session/stop", { method: "POST" });
+//     } catch (err) {
+//       console.error("Failed to stop session:", err);
+//     }
+
+//     // ✅ Disconnect LiveKit
 //     if (room) {
 //       await room.disconnect();
 //       setRoom(null);
 //     }
 
 //     setActive(false);
+//     setConnectStatus('idle');
 //     endSession?.();
 
-//     if (sessionId) {
-//       router.push(`/summary?sessionId=${sessionId}`);
+//     // ✅ Redirect to summary
+//     const finalSessionId = wsSessionId || sessionId;
+//     if (finalSessionId) {
+//       router.push(`/summary?sessionId=${finalSessionId}`);
 //     } else {
 //       router.push("/");
 //     }
@@ -102,10 +117,9 @@
 
 //   const handleCancelEnd = () => {
 //     setShowModal(false);
-//     // active stays true — call continues
 //   };
 
-//   // ── Render ─────────────────────────────────────────────────────────────
+//   // ── Render ────────────────────────────────────────────────────────────
 //   if (!mounted) {
 //     return (
 //       <div className="flex h-screen bg-black text-white items-center justify-center">
@@ -140,11 +154,28 @@
 //           </div>
 //         )}
 
-//         <VoiceOrb level={level} active={active} speaking={speaking} />
+//         {/* Connecting overlay */}
+//         {connectStatus === 'connecting' && (
+//           <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-black/60 backdrop-blur-sm rounded-xl">
+//             <div className="flex flex-col items-center gap-4">
+//               <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+//               <div className="text-center space-y-1">
+//                 <p className="text-zinc-200 text-sm font-medium animate-pulse">
+//                   {connectMessages[connectMsg]}
+//                 </p>
+//                 <p className="text-zinc-500 text-xs">
+//                   Please wait while we set up your session
+//                 </p>
+//               </div>
+//             </div>
+//           </div>
+//         )}
+
+//         <VoiceOrb level={level} active={active} speaking={speaking} connectStatus={connectStatus} />
 
 //         {active && <CallTimer seconds={seconds} />}
 
-//         <VoiceControls active={active} setActive={handleToggle} />
+//         <VoiceControls active={active} setActive={handleToggle} connectStatus={connectStatus} />
 
 //       </div>
 
@@ -165,7 +196,7 @@
 //   );
 // }
 
-// // ── Loading skeleton ───────────────────────────────────────────────────────
+// // ── Loading skeleton ──────────────────────────────────────────────────────
 
 // function LoadingSkeleton() {
 //   return (
@@ -187,7 +218,6 @@
 //     </div>
 //   );
 // }
-
 
 "use client";
 
@@ -227,7 +257,9 @@ export default function VoiceLayout() {
 
   const { level, error: micError }                       = useAudioLevel(active);
   const { seconds, sessionId, startSession, endSession } = useSession();
-  const { sessionId: wsSessionId }                       = useTranscript();
+
+  // ✅ Get sessionId and stopAudio from WebSocket hook
+  const { sessionId: wsSessionId, stopAudio } = useTranscript();
 
   // ── Mount ─────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -280,14 +312,17 @@ export default function VoiceLayout() {
   const handleConfirmEnd = async () => {
     setShowModal(false);
 
-    // ✅ Stop backend STT/TTS processing
+    // ✅ Stop audio immediately
+    stopAudio();
+
+    // ✅ Tell backend to stop STT/TTS
     try {
       await fetch("http://localhost:8000/session/stop", { method: "POST" });
     } catch (err) {
       console.error("Failed to stop session:", err);
     }
 
-    // ✅ Disconnect LiveKit
+    // ✅ Disconnect LiveKit — stops mic stream to agent
     if (room) {
       await room.disconnect();
       setRoom(null);

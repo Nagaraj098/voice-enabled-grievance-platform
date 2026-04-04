@@ -1,0 +1,19 @@
+{
+  "issue_category": "Other",
+  "severity": "medium",
+  "description": "User wants to register and complain about an issue",
+  "resolution_status": "Registered",
+  "user_name": "Unknown",
+  "session_id": "e47fb65e-f605-4090-a6d1-53be25c9c514",
+  "messages": [
+    {
+      "role": "user",
+      "text": "I want to register and complain."
+    },
+    {
+      "role": "agent",
+      "text": "I'm here to help you with that. Thank you for reaching out to us. Before we begin, I want to assure you that I'm here to listen and assist you to the best of my abilities. Your concerns are important to us, and I'll do my best to understand the issue you're facing.\n\nTo better assist you, I'd like to start by asking a few questions. Can you please tell me what the problem is that you're experiencing? What's the issue that's causing you discomfort or inconvenience?"
+    }
+  ],
+  "duration": "49s"
+}
