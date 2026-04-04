@@ -1,0 +1,59 @@
+{
+  "issue_category": "Water Supply",
+  "severity": "high",
+  "description": "User is experiencing a water crisis",
+  "resolution_status": "Registered",
+  "user_name": "Unknown",
+  "session_id": "812646f0-f8a4-4ee4-97b9-8b7250c9c75e",
+  "messages": [
+    {
+      "role": "user",
+      "text": "I want to register a complaint."
+    },
+    {
+      "role": "agent",
+      "text": "Thank you for reaching out to us. I'm here to help you register your complaint and work towards a resolution. Can you please tell me a little bit about the issue you're experiencing? What is the problem you're facing?"
+    },
+    {
+      "role": "user",
+      "text": "Autocritic is..."
+    },
+    {
+      "role": "agent",
+      "text": "I apologize, but I didn't quite catch that. Can you please rephrase or provide more details about the issue you're experiencing with Autocritic?"
+    },
+    {
+      "role": "user",
+      "text": "Thank you."
+    },
+    {
+      "role": "agent",
+      "text": "It seems like there might have been a miscommunication. Could you please start again and describe the issue you're facing? What seems to be the problem?"
+    },
+    {
+      "role": "user",
+      "text": "I have water crisis"
+    },
+    {
+      "role": "agent",
+      "text": "A water crisis can be a serious issue. Can you tell me when this problem started? Was it a sudden issue that occurred today, or has it been ongoing for a while?"
+    },
+    {
+      "role": "user",
+      "text": "Thank you."
+    },
+    {
+      "role": "agent",
+      "text": "You're welcome. So, the water crisis started on a specific date or around a certain time, is that correct?"
+    },
+    {
+      "role": "user",
+      "text": "I don't want to."
+    },
+    {
+      "role": "agent",
+      "text": "I understand that you may not feel like sharing that information, and that's okay. However, to help me better assist you with your issue, I need to know when the problem started. Could you please try to recall a specific date or time when the issue began? This will help me to better understand the context of the problem.\n\nAdditionally, could you please rate the severity of the issue on a scale of low, medium, or high? This will help me to prioritize your issue and allocate the necessary resources to resolve it."
+    }
+  ],
+  "duration": "2m 8s"
+}

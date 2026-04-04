@@ -211,12 +211,11 @@ export default function VoiceLayout() {
   const [showModal, setShowModal]       = useState(false);
   const [room, setRoom]                 = useState<Room | null>(null);
   const [livekitError, setLivekitError] = useState<string | null>(null);
-
   const [connectStatus, setConnectStatus] = useState<
     'idle' | 'connecting' | 'connected' | 'error'
   >('idle');
-
   const [connectMsg, setConnectMsg] = useState(0);
+
   const connectMessages = [
     "Connecting with Agent...",
     "Setting up your session...",
@@ -226,37 +225,29 @@ export default function VoiceLayout() {
 
   const router = useRouter();
 
-  const { level, error: micError }              = useAudioLevel(active);
+  const { level, error: micError }                       = useAudioLevel(active);
   const { seconds, sessionId, startSession, endSession } = useSession();
-  const { sessionId: wsSessionId }              = useTranscript(); // ✅ get session ID from WS
+  const { sessionId: wsSessionId }                       = useTranscript();
 
+  // ── Mount ─────────────────────────────────────────────────────────────
   useEffect(() => {
     setMounted(true);
   }, []);
 
-<<<<<<< HEAD
-  // ── Start streaming ──────────────────────────────────────────────────
-=======
+  // ── Rotate connecting messages ────────────────────────────────────────
   useEffect(() => {
     if (connectStatus !== 'connecting') return;
     const interval = setInterval(() => {
-      setConnectMsg(prev => (prev + 1) % connectMessages.length);
+      setConnectMsg((prev) => (prev + 1) % connectMessages.length);
     }, 1500);
     return () => clearInterval(interval);
   }, [connectStatus]);
 
-  // ── Start / Stop LiveKit stream ────────────────────────────────────────
->>>>>>> acc15cf9f43c07225830c61f62d33d9fd7a681a0
+  // ── Start streaming ───────────────────────────────────────────────────
   const handleToggle = async () => {
     const newState = !active;
 
     if (newState) {
-<<<<<<< HEAD
-=======
-      // Only allow starting if idle
-      if (connectStatus === 'connecting') return;
-
->>>>>>> acc15cf9f43c07225830c61f62d33d9fd7a681a0
       try {
         setConnectStatus('connecting');
         setLivekitError(null);
@@ -281,19 +272,13 @@ export default function VoiceLayout() {
       }
 
     } else {
-<<<<<<< HEAD
-=======
-      // Only show end call modal if already connected
-      if (connectStatus !== 'connected') return;
->>>>>>> acc15cf9f43c07225830c61f62d33d9fd7a681a0
       setShowModal(true);
     }
   };
 
-  // ── End call ─────────────────────────────────────────────────────────
+  // ── End call ──────────────────────────────────────────────────────────
   const handleConfirmEnd = async () => {
     setShowModal(false);
-<<<<<<< HEAD
 
     // ✅ Stop backend STT/TTS processing
     try {
@@ -302,26 +287,20 @@ export default function VoiceLayout() {
       console.error("Failed to stop session:", err);
     }
 
-    // ✅ Disconnect LiveKit — stops mic and audio stream to agent
-=======
->>>>>>> acc15cf9f43c07225830c61f62d33d9fd7a681a0
+    // ✅ Disconnect LiveKit
     if (room) {
       await room.disconnect();
       setRoom(null);
     }
+
     setActive(false);
     setConnectStatus('idle');
     endSession?.();
-<<<<<<< HEAD
 
-    // ✅ Use wsSessionId from WebSocket (more reliable than useSession)
+    // ✅ Redirect to summary
     const finalSessionId = wsSessionId || sessionId;
     if (finalSessionId) {
       router.push(`/summary?sessionId=${finalSessionId}`);
-=======
-    if (sessionId) {
-      router.push(`/summary?sessionId=${sessionId}`);
->>>>>>> acc15cf9f43c07225830c61f62d33d9fd7a681a0
     } else {
       router.push("/");
     }
@@ -366,6 +345,7 @@ export default function VoiceLayout() {
           </div>
         )}
 
+        {/* Connecting overlay */}
         {connectStatus === 'connecting' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-black/60 backdrop-blur-sm rounded-xl">
             <div className="flex flex-col items-center gap-4">
