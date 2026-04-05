@@ -1,0 +1,157 @@
+{
+  "dataset_type": "department_knowledge",
+  "category": "Roads and Sanitation",
+  "department": "BBMP - Bruhat Bengaluru Mahanagara Palike",
+  "version": "1.0",
+  "description": "Complete knowledge base for BBMP roads and sanitation department - used for RAG-based grievance resolution",
+  "policies": [
+    {
+      "rule": "Pothole repair must begin within 7 days on main roads"
+    },
+    {
+      "rule": "Temporary road patching required within 24 hours for accident-prone areas"
+    },
+    {
+      "rule": "Street light repair within 48 hours of complaint"
+    },
+    {
+      "rule": "Daily garbage collection mandatory in all residential areas"
+    },
+    {
+      "rule": "Missed garbage collection complaint resolved within 24 hours"
+    },
+    {
+      "rule": "Bulk waste removal within 48 hours of request"
+    },
+    {
+      "rule": "Public toilet cleaning minimum twice daily"
+    },
+    {
+      "rule": "Illegal dumping complaints acted upon within 12 hours"
+    },
+    {
+      "rule": "Storm drain cleaning mandatory before monsoon season"
+    },
+    {
+      "rule": "Road cave-in or sinkhole treated as emergency within 4 hours"
+    }
+  ],
+  "contact_info": {
+    "helpline": "1533",
+    "email": "grievance@bbmp.gov.in",
+    "swm_email": "swm@bbmp.gov.in",
+    "website": "https://bbmp.gov.in",
+    "headquarters": "N.R. Square, Bengaluru - 560002",
+    "working_hours": "9:00 AM - 5:30 PM (Mon-Sat)",
+    "emergency": "24x7 helpline for road emergencies",
+    "sahaaya_app": "BBMP Sahaaya mobile app for faster complaints"
+  },
+  "escalation_matrix": [
+    {
+      "level": 1,
+      "role": "Assistant Engineer",
+      "response_time": "7 days",
+      "contact": "Ward office",
+      "when_to_escalate": "No response in 7 days"
+    },
+    {
+      "level": 2,
+      "role": "Executive Engineer",
+      "response_time": "15 days",
+      "contact": "Sub-division office",
+      "when_to_escalate": "No response in 15 days"
+    },
+    {
+      "level": 3,
+      "role": "Chief Engineer",
+      "response_time": "30 days",
+      "contact": "BBMP head office",
+      "when_to_escalate": "No response in 30 days"
+    },
+    {
+      "level": 4,
+      "role": "BBMP Commissioner",
+      "response_time": "45 days",
+      "contact": "BBMP Commissioner office, N.R. Square",
+      "when_to_escalate": "No response in 45 days"
+    }
+  ],
+  "common_grievances": [
+    {
+      "issue": "Potholes on road",
+      "resolution": "Report to BBMP helpline 1533 with exact location and photos. Temporary patching within 24 hours for accident-prone roads. Permanent repair within 7 days.",
+      "resolution_time": "24 hours - 7 days",
+      "severity": "Medium"
+    },
+    {
+      "issue": "Road cave-in or sinkhole",
+      "resolution": "Call 1533 immediately. This is an emergency. Barricading within 4 hours. Repair within 48 hours.",
+      "resolution_time": "4-48 hours",
+      "severity": "Critical"
+    },
+    {
+      "issue": "Street light not working",
+      "resolution": "Report to BBMP helpline 1533 with street name and location. Repair within 48 hours. Use BBMP Sahaaya app for faster response.",
+      "resolution_time": "48 hours",
+      "severity": "Low"
+    },
+    {
+      "issue": "Garbage not collected",
+      "resolution": "Call 1533 or BBMP Sahaaya app. Specify ward number and area. Immediate pickup arranged. Resolved within 24 hours.",
+      "resolution_time": "24 hours",
+      "severity": "Medium"
+    },
+    {
+      "issue": "Illegal garbage dumping",
+      "resolution": "Report to BBMP with location. Action taken within 12 hours. Fine imposed on defaulters. Area cleaned within 24 hours.",
+      "resolution_time": "12-24 hours",
+      "severity": "Medium"
+    },
+    {
+      "issue": "Blocked or overflowing drain",
+      "resolution": "Call 1533. Drain cleaning within 48 hours. Emergency cleaning for overflow within 12 hours.",
+      "resolution_time": "12-48 hours",
+      "severity": "High"
+    },
+    {
+      "issue": "Encroachment on footpath or road",
+      "resolution": "File complaint at ward office or online. Survey within 7 days. Action taken within 15 days.",
+      "resolution_time": "7-15 days",
+      "severity": "Low"
+    }
+  ],
+  "services": [
+    "Road repair and maintenance",
+    "Street light maintenance",
+    "Solid waste management",
+    "Storm water drain maintenance",
+    "Building plan approval",
+    "Trade license",
+    "Property tax",
+    "Public toilet maintenance"
+  ],
+  "online_services": {
+    "complaint_portal": "https://bbmp.gov.in/complaint",
+    "sahaaya_app": "Available on Play Store and App Store",
+    "property_tax": "https://bbmp.gov.in/property-tax",
+    "track_complaint": "https://bbmp.gov.in/track"
+  },
+  "faq": [
+    {
+      "question": "How do I report a pothole?",
+      "answer": "Call BBMP helpline 1533 or use the BBMP Sahaaya app. Share exact location and photos. Temporary patching within 24 hours for dangerous potholes."
+    },
+    {
+      "question": "Garbage has not been collected for 2 days. What to do?",
+      "answer": "Call 1533 or use BBMP Sahaaya app. Provide ward number and area name. Immediate pickup arranged within 24 hours."
+    },
+    {
+      "question": "Street light is not working near my house. How to report?",
+      "answer": "Call BBMP helpline 1533 with street name and nearest landmark. Repair within 48 hours. You can also use BBMP Sahaaya app."
+    },
+    {
+      "question": "There is a road cave-in. Is it an emergency?",
+      "answer": "Yes, road cave-in is a critical emergency. Call 1533 immediately. Barricading done within 4 hours. Do not drive or walk near the affected area."
+    }
+  ]
+}
