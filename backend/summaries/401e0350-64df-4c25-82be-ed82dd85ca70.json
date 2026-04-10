@@ -1,0 +1,35 @@
+{
+  "issue_category": "Other",
+  "severity": "medium",
+  "description": "Grievance registered via voice call.",
+  "resolution_status": "Registered",
+  "user_name": "Unknown",
+  "session_id": "401e0350-64df-4c25-82be-ed82dd85ca70",
+  "messages": [
+    {
+      "role": "user",
+      "text": "item. I want to register and play."
+    },
+    {
+      "role": "agent",
+      "text": "Sorry, I couldn't process that right now."
+    },
+    {
+      "role": "user",
+      "text": "Yes.  I'm on floor, Michael.  I'll drive on.  I'm on floor.  I'm on floor, Michael.  I'll drive on."
+    },
+    {
+      "role": "agent",
+      "text": "Sorry, I couldn't process that right now."
+    },
+    {
+      "role": "user",
+      "text": "Thank you."
+    },
+    {
+      "role": "agent",
+      "text": "Sorry, I couldn't process that right now."
+    }
+  ],
+  "duration": "1m 13s"
+}

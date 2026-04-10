@@ -1,0 +1,35 @@
+{
+  "issue_category": "Other",
+  "severity": "high",
+  "description": "The user is experiencing an issue that is not specified but is described as needing to be 'blown up'",
+  "resolution_status": "Registered",
+  "user_name": "Unknown",
+  "session_id": "48ad2ba7-eb97-4be3-8639-f2d84a7ec9eb",
+  "messages": [
+    {
+      "role": "user",
+      "text": "Hello, I want to register a complaint."
+    },
+    {
+      "role": "agent",
+      "text": "Thank you for reaching out to us. I'm here to help you with your issue. Can you please tell me a little bit about what's bothering you? What's the problem you're experiencing?"
+    },
+    {
+      "role": "user",
+      "text": "Thank you.  Thank you."
+    },
+    {
+      "role": "agent",
+      "text": "I'm happy to listen and assist you. Could you please describe the issue you're facing in a bit more detail? What specifically is the problem you're experiencing?"
+    },
+    {
+      "role": "user",
+      "text": "Hmm?  Do you mind if I blow it up?"
+    },
+    {
+      "role": "agent",
+      "text": "Not at all! Take your time to describe the issue. Sometimes it helps to start from the beginning and work through it. I'm here to listen and help."
+    }
+  ],
+  "duration": "2m 32s"
+}

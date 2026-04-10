@@ -1,0 +1,43 @@
+{
+  "issue_category": "Other",
+  "severity": "medium",
+  "description": "Grievance registered via voice call.",
+  "resolution_status": "Registered",
+  "user_name": "Unknown",
+  "session_id": "b0dc810c-acb7-450f-b01e-7aad0412d152",
+  "messages": [
+    {
+      "role": "user",
+      "text": "Hello, in our area garbage is not collected."
+    },
+    {
+      "role": "agent",
+      "text": "Sorry, I couldn't process that right now."
+    },
+    {
+      "role": "user",
+      "text": "What did you say?  What did they do to you?  I don't know."
+    },
+    {
+      "role": "agent",
+      "text": "Sorry, I couldn't process that right now."
+    },
+    {
+      "role": "user",
+      "text": "I'm telling you."
+    },
+    {
+      "role": "agent",
+      "text": "Sorry, I couldn't process that right now."
+    },
+    {
+      "role": "user",
+      "text": "I don't know how to respond to that."
+    },
+    {
+      "role": "agent",
+      "text": "Sorry, I couldn't process that right now."
+    }
+  ],
+  "duration": "1m 46s"
+}

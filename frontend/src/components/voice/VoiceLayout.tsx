@@ -245,6 +245,7 @@ export default function VoiceLayout() {
     'idle' | 'connecting' | 'connected' | 'error'
   >('idle');
   const [connectMsg, setConnectMsg] = useState(0);
+  const [userSpeaking, setUserSpeaking] = useState(false);
 
   const connectMessages = [
     "Connecting with Agent...",
@@ -274,6 +275,15 @@ export default function VoiceLayout() {
     }, 1500);
     return () => clearInterval(interval);
   }, [connectStatus]);
+
+  useEffect(() => {
+    if (level > 0.05) {
+      setUserSpeaking(true);
+    } else {
+      const timeout = setTimeout(() => setUserSpeaking(false), 500);
+      return () => clearTimeout(timeout);
+    }
+  }, [level]);
 
   // ── Start streaming ───────────────────────────────────────────────────
   const handleToggle = async () => {
@@ -397,7 +407,7 @@ export default function VoiceLayout() {
           </div>
         )}
 
-        <VoiceOrb level={level} active={active} speaking={speaking} connectStatus={connectStatus} />
+        <VoiceOrb level={level} active={active} speaking={speaking} connectStatus={connectStatus} userSpeaking={userSpeaking} />
 
         {active && <CallTimer seconds={seconds} />}
 
