@@ -1,0 +1,35 @@
+{
+  "issue_category": "Other",
+  "severity": "medium",
+  "description": "Grievance registered via voice call.",
+  "resolution_status": "Registered",
+  "user_name": "Unknown",
+  "session_id": "cc66b995-087e-47d4-8bf6-7242ee2a042c",
+  "messages": [
+    {
+      "role": "user",
+      "text": "register a complaint."
+    },
+    {
+      "role": "agent",
+      "text": "I'm happy to help you with that. Before we begin, I'd like to assure you that I'm here to listen and assist you in resolving your issue. Your complaint is important to me, and I'll do my best to understand your concerns.\n\nTo start, can you please tell me what the problem is that you're experiencing? What seems to be the issue that's bothering you?"
+    },
+    {
+      "role": "user",
+      "text": "Sorry I'm late."
+    },
+    {
+      "role": "agent",
+      "text": "No need to apologize for being late. We're here to help you with your issue, and I'm happy to work with you at your convenience. Let's focus on your problem now.\n\nTo start, can you please tell me what the problem is that you're experiencing? What seems to be the issue that's bothering you?"
+    },
+    {
+      "role": "user",
+      "text": "No problem.  Okay.  Okay.  Okay."
+    },
+    {
+      "role": "agent",
+      "text": "It sounds like you're feeling a bit frustrated or overwhelmed. I'm here to listen and help you work through your issue. Can you take a deep breath and tell me what's been going on? What's been bothering you that's making you feel this way? \n\n(And just a gentle reminder, I'm here to listen and help, not to judge. So please feel free to share as much or as little as you'd like.)"
+    }
+  ],
+  "duration": "4m 13s"
+}

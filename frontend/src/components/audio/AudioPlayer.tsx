@@ -11,33 +11,46 @@ export default function AudioPlayer({
   onStart?: () => void;
   onEnd?: () => void;
 }) {
-  const hasInteracted = useRef(false);
+  const hasInteracted = useRef(true); // ✅ Always allow — user already clicked Start Call
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    const unlock = () => {
-      hasInteracted.current = true;
-      window.removeEventListener("click", unlock);
-    };
+    if (!base64) return;
 
-    window.addEventListener("click", unlock);
-
-    return () => window.removeEventListener("click", unlock);
-  }, []);
-
-  useEffect(() => {
-    if (!base64 || !hasInteracted.current) return;
+    // ✅ Stop any previous audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
 
     const audio = new Audio(`data:audio/wav;base64,${base64}`);
+    audioRef.current = audio;
 
-    audio.onplay = () => onStart?.();
-    audio.onended = () => onEnd?.();
+    audio.onplay = () => {
+      console.log("🔊 AI audio started playing");
+      onStart?.();
+    };
+
+    audio.onended = () => {
+      console.log("🔇 AI audio finished");
+      onEnd?.();
+    };
+
+    audio.onerror = (err) => {
+      console.error("❌ Audio error:", err);
+      onEnd?.(); // ✅ Reset speaking state even on error
+    };
 
     audio.play().catch((err) => {
-      console.log("Audio play blocked:", err);
+      console.warn("⚠️ Audio play blocked:", err);
+      onEnd?.(); // ✅ Reset speaking state if play is blocked
     });
 
     return () => {
       audio.pause();
+      audio.onplay = null;
+      audio.onended = null;
+      audio.onerror = null;
     };
   }, [base64]);
 

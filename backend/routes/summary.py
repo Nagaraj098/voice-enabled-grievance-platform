@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException
 
 router = APIRouter()
 
-SUMMARIES_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "summaries")
+SUMMARIES_DIR = os.path.join(os.path.dirname(os.path.dirname(file)), "summaries")
 os.makedirs(SUMMARIES_DIR, exist_ok=True)
 
 
