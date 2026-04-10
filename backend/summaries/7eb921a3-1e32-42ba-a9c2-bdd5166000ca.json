@@ -1,0 +1,51 @@
+{
+  "issue_category": "Other",
+  "severity": "medium",
+  "description": "Grievance registered via voice call.",
+  "resolution_status": "Registered",
+  "user_name": "Unknown",
+  "session_id": "7eb921a3-1e32-42ba-a9c2-bdd5166000ca",
+  "messages": [
+    {
+      "role": "user",
+      "text": "We have registered a complaint, right?  I want to register a complaint."
+    },
+    {
+      "role": "agent",
+      "text": "Excellent! I'm here to help you with that. Welcome to our grievance registration process. I'm an empathetic grievance registration agent, and I'll be assisting you throughout this process.\n\nTo better understand your issue, I'd like to start by asking: What seems to be the problem you're facing? Please describe it in as much detail as possible."
+    },
+    {
+      "role": "user",
+      "text": "I want to write that."
+    },
+    {
+      "role": "agent",
+      "text": "It seems like you'd like to communicate the issue in your own words. Please go ahead and write down the problem you're experiencing. I'll wait while you do that."
+    },
+    {
+      "role": "user",
+      "text": "I'm sorry.  You didn't get it."
+    },
+    {
+      "role": "agent",
+      "text": "It's okay! I understand that sometimes it takes a little clarification. Let me try again.\n\nYou want to register a complaint, correct? You'd like to bring an issue to our attention, and I'm here to help you do that. Is that right?"
+    },
+    {
+      "role": "user",
+      "text": "Madeline and on next"
+    },
+    {
+      "role": "agent",
+      "text": "It seems like you were saying \"may I\" or \"may we\" instead of \"madeline\". I'm not sure what you're trying to say, could you please clarify or rephrase your sentence? I'll do my best to understand and assist you."
+    },
+    {
+      "role": "user",
+      "text": "Oh, I didn't know that."
+    },
+    {
+      "role": "agent",
+      "text": "It can be frustrating when we don't understand each other right away. Let me start again.\n\nTo make sure I get it right this time, you wanted to say \"May I?\" or \"May we?\" but it came out as \"Madeline and on next\". Is that correct?\n\nAlso, I want to acknowledge that it can be a bit disheartening when we feel like we're not being understood. I'm here to listen and help, and I want to make sure I get it right."
+    }
+  ],
+  "duration": "2m 2s"
+}
