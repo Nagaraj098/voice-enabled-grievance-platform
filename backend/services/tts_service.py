@@ -56,3 +56,4 @@ class TTSService:
             return ""
 
         return base64.b64encode(audio_bytes).decode("utf-8")
+
