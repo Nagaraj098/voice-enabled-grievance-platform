@@ -8,6 +8,8 @@ from services.llm_service import generate_response
 from agent.state_machine import Stage
 import json, os
 from routes.knowledge import router as knowledge_router
+from routes.tickets import router as tickets_router
+
 
 SUMMARIES_DIR = os.path.join(os.path.dirname(__file__), "summaries")
 os.makedirs(SUMMARIES_DIR, exist_ok=True)
@@ -25,7 +27,7 @@ app.add_middleware(
 app.include_router(token_router)
 app.include_router(summary_router)
 app.include_router(knowledge_router)
-
+app.include_router(tickets_router)
 
 # ✅ Internal broadcast endpoint — agent posts here
 @app.post("/internal/broadcast")

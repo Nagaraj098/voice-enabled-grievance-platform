@@ -1,8 +1,9 @@
 "use client";
-import { Bot, Database, Wrench, Puzzle, Mic2, MessageSquare, Users, Activity, Settings } from "lucide-react";
+import { Bot, Database, Wrench, Puzzle, Mic2, MessageSquare, Users, Activity, Settings, LayoutDashboard } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
-export default function Sidebar({ activePage = "home" }: { activePage?: string }) {
+export default function Sidebar({ activePage = "home" }: { activePage?: 'home' | 'call' | 'knowledge-base' | 'summary' | 'dashboard' }) {
   return (
     <div className="w-60 bg-[#0a0a0a] border-r border-zinc-800/60 p-4 flex flex-col h-full text-zinc-300">
       
@@ -18,6 +19,10 @@ export default function Sidebar({ activePage = "home" }: { activePage?: string }
         
         {/* Main Section */}
         <nav className="space-y-0.5">
+          <Link href="/dashboard" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${activePage === 'dashboard' ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}>
+            <LayoutDashboard size={16} />
+            Dashboard
+          </Link>
           <NavItem icon={<Bot size={16} />} label="Agents" active={activePage === 'home'} accent="blue" href="/home" />
           <NavItem icon={<Database size={16} />} label="Knowledge Base" active={activePage === 'knowledge-base'} accent="violet" href="/knowledge-base" />
           <NavItem icon={<Wrench size={16} />} label="Tools" accent="amber" />
