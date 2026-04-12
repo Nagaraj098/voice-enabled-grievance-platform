@@ -13,6 +13,7 @@ export function useTranscript() {
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isAgentSpeaking, setIsAgentSpeaking] = useState(false);
 
   const wsRef = useRef<WebSocket | null>(null);
   const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -29,6 +30,7 @@ export function useTranscript() {
       audioRef.current = null;
       console.log("🔇 Audio stopped");
     }
+    setIsAgentSpeaking(false);
   }, []);
 
   // ── Play base64 audio ────────────────────────────────────────────────────
@@ -39,11 +41,21 @@ export function useTranscript() {
 
       const audio = new Audio(`data:audio/mpeg;base64,${base64Audio}`);
       audioRef.current = audio;
-      audio.play().catch((err) => console.warn("Audio play failed:", err));
-      audio.onended = () => { audioRef.current = null; };
+      setIsAgentSpeaking(true);
+
+      audio.play().catch((err) => {
+        console.warn("Audio play failed:", err);
+        setIsAgentSpeaking(false);
+      });
+
+      audio.onended = () => { 
+        audioRef.current = null; 
+        setIsAgentSpeaking(false);
+      };
 
     } catch (err) {
       console.error("Audio playback error:", err);
+      setIsAgentSpeaking(false);
     }
   }, [stopAudio]);
 
@@ -160,6 +172,7 @@ export function useTranscript() {
     error,
     sessionId,
     stopAudio,  // ✅ exposed for VoiceLayout to call on end
+    isAgentSpeaking,
   };
 }
 

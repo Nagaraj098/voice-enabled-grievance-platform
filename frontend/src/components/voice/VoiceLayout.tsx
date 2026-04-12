@@ -260,7 +260,7 @@ export default function VoiceLayout() {
   const { seconds, sessionId, startSession, endSession } = useSession();
 
   // ✅ Get sessionId and stopAudio from WebSocket hook
-  const { sessionId: wsSessionId, stopAudio } = useTranscript();
+  const { sessionId: wsSessionId, stopAudio, isAgentSpeaking } = useTranscript();
 
   // ── Mount ─────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -407,7 +407,21 @@ export default function VoiceLayout() {
           </div>
         )}
 
-        <VoiceOrb level={level} active={active} speaking={speaking} connectStatus={connectStatus} userSpeaking={userSpeaking} />
+        <div className="flex flex-col md:flex-row items-center justify-center gap-12 md:gap-24 w-full">
+          <VoiceOrb
+            variant="agent"
+            active={active}
+            isSpeaking={isAgentSpeaking}
+            connectStatus={connectStatus}
+          />
+          <VoiceOrb
+            variant="user"
+            level={level}
+            active={active}
+            isSpeaking={userSpeaking}
+            connectStatus={connectStatus}
+          />
+        </div>
 
         {active && <CallTimer seconds={seconds} />}
 
