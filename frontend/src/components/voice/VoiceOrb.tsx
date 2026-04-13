@@ -7,12 +7,14 @@ export default function VoiceOrb({
   active,
   isSpeaking = false,
   connectStatus = 'idle',
+  isMuted = false,
 }: {
   variant?: 'user' | 'agent';
   level?: number;
   active: boolean;
   isSpeaking?: boolean;
   connectStatus?: 'idle' | 'connecting' | 'connected' | 'error';
+  isMuted?: boolean;
 }) {
   const isConnecting = connectStatus === 'connecting';
   
@@ -40,7 +42,7 @@ export default function VoiceOrb({
     return () => clearInterval(interval);
   }, [isSpeaking, variant]);
 
-  const isActuallySpeaking = isSpeaking;
+  const isActuallySpeaking = isSpeaking && !isMuted;
 
   return (
     <div className="relative flex flex-col items-center justify-center gap-6">
@@ -135,10 +137,12 @@ export default function VoiceOrb({
       {/* Status label */}
       <div className={`text-xs font-medium transition-all duration-300 ${
         isConnecting ? 'text-violet-400' :
+        isMuted && variant === 'user' ? 'text-red-400' :
         isActuallySpeaking ? (variant === 'agent' ? 'text-cyan-400' : 'text-blue-400') :
         active ? 'text-zinc-500' : 'text-zinc-700'
       }`}>
         {isConnecting ? '⟳ Connecting...' :
+         isMuted && variant === 'user' ? 'Muted' :
          isActuallySpeaking ? (variant === 'agent' ? '◉ AI Speaking' : '◉ Listening to you...') :
          active ? (variant === 'agent' ? '○ Agent idle' : '○ Mic on') : (variant === 'agent' ? 'AI Agent' : 'You')}
       </div>

@@ -4,10 +4,14 @@ export default function VoiceControls({
   active,
   setActive,
   connectStatus,
+  isMuted,
+  onToggleMute,
 }: {
   active: boolean;
   setActive: () => void;
   connectStatus: 'idle' | 'connecting' | 'connected' | 'error';
+  isMuted?: boolean;
+  onToggleMute?: () => void;
 }) {
   const isConnecting = connectStatus === 'connecting';
   const isConnected = connectStatus === 'connected';
@@ -53,8 +57,13 @@ export default function VoiceControls({
 
       {/* Mute only shown when connected */}
       {isConnected && (
-        <button className="px-4 py-1 border border-zinc-700 rounded text-sm text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors">
-          Mute
+        <button 
+          onClick={onToggleMute}
+          className={`px-4 py-1 border rounded text-sm transition-colors ${
+             isMuted ? 'text-red-400 border-red-800' : 'text-zinc-400 border-zinc-700 hover:text-zinc-200 hover:border-zinc-500'
+          }`}
+        >
+          {isMuted ? "Unmute" : "Mute"}
         </button>
       )}
     </div>

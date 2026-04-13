@@ -98,7 +98,7 @@ function SummaryContent() {
           🔄 Retry
         </button>
         <button
-          onClick={() => router.push("/home")}
+          onClick={() => router.push("/dashboard")}
           className="px-5 py-2 bg-zinc-800 text-zinc-300 rounded-lg text-sm hover:bg-zinc-700 transition-colors"
         >
           Go to Dashboard
@@ -154,7 +154,7 @@ function SummaryContent() {
           Start New Call
         </button>
         <button
-          onClick={() => router.push("/home")}
+          onClick={() => router.push("/dashboard")}
           className="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 text-white text-sm font-semibold hover:scale-[1.02] transition-all shadow-[0_0_20px_-5px_rgba(99,102,241,0.4)]"
         >
           Go to Dashboard

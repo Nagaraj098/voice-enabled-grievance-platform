@@ -1,0 +1,142 @@
+{
+  "dataset_type": "department_knowledge",
+  "category": "Water Supply",
+  "department": "BWSSB - Bangalore Water Supply and Sewerage Board",
+  "version": "1.0",
+  "description": "Complete knowledge base for BWSSB water supply department - used for RAG-based grievance resolution",
+  "policies": [
+    {
+      "rule": "Water supply must be restored within 48 hours of complaint registration"
+    },
+    {
+      "rule": "Compensation applicable if water supply delay exceeds 72 hours"
+    },
+    {
+      "rule": "Emergency water tanker must be provided within 6 hours for critical shortage"
+    },
+    {
+      "rule": "Scheduled maintenance must be announced 24 hours in advance"
+    },
+    {
+      "rule": "Water quality complaints must be addressed within 24 hours with lab testing"
+    },
+    {
+      "rule": "New water connection must be provided within 30 days of application"
+    },
+    {
+      "rule": "Pipeline leakage must be repaired within 24 hours of complaint"
+    },
+    {
+      "rule": "Billing disputes must be resolved within 15 working days"
+    }
+  ],
+  "contact_info": {
+    "helpline": "1916",
+    "email": "grievance@bwssb.gov.in",
+    "website": "https://www.bwssb.gov.in",
+    "headquarters": "Cauvery Bhavan, K.G. Road, Bengaluru - 560009",
+    "working_hours": "9:00 AM - 5:30 PM (Mon-Sat)",
+    "emergency": "24x7 helpline available"
+  },
+  "escalation_matrix": [
+    {
+      "level": 1,
+      "role": "Junior Engineer",
+      "response_time": "48 hours",
+      "contact": "Local ward office",
+      "when_to_escalate": "No response in 48 hours"
+    },
+    {
+      "level": 2,
+      "role": "Assistant Executive Engineer",
+      "response_time": "72 hours",
+      "contact": "Division office",
+      "when_to_escalate": "No response in 72 hours"
+    },
+    {
+      "level": 3,
+      "role": "Executive Engineer",
+      "response_time": "7 days",
+      "contact": "Zone office",
+      "when_to_escalate": "No response in 7 days"
+    },
+    {
+      "level": 4,
+      "role": "Chief Engineer",
+      "response_time": "15 days",
+      "contact": "BWSSB Head Office, Cauvery Bhavan",
+      "when_to_escalate": "No response in 15 days"
+    }
+  ],
+  "common_grievances": [
+    {
+      "issue": "No water supply",
+      "resolution": "Call 1916 and register complaint. Emergency tanker available within 6 hours. Supply restored within 48 hours.",
+      "resolution_time": "48 hours",
+      "severity": "High"
+    },
+    {
+      "issue": "Low water pressure",
+      "resolution": "Report to ward office. Engineer will inspect pipeline within 24 hours. Repair within 48 hours.",
+      "resolution_time": "48 hours",
+      "severity": "Medium"
+    },
+    {
+      "issue": "Contaminated or dirty water",
+      "resolution": "Call 1916 immediately. Lab testing within 24 hours. Do not drink water until cleared. Emergency supply provided.",
+      "resolution_time": "24 hours",
+      "severity": "Critical"
+    },
+    {
+      "issue": "Pipeline leakage or burst pipe",
+      "resolution": "Call 1916. Repair team dispatched within 4 hours. Road damage repaired by BBMP separately.",
+      "resolution_time": "4-24 hours",
+      "severity": "High"
+    },
+    {
+      "issue": "Wrong water bill or overbilling",
+      "resolution": "Visit BWSSB office with previous bills. Dispute resolved within 15 working days. Excess amount adjusted in next bill.",
+      "resolution_time": "15 working days",
+      "severity": "Low"
+    },
+    {
+      "issue": "Water meter not working",
+      "resolution": "Report to BWSSB. Meter inspection within 7 days. Faulty meter replaced within 15 days.",
+      "resolution_time": "7-15 days",
+      "severity": "Medium"
+    }
+  ],
+  "services": [
+    "New water connection",
+    "Sewerage connection",
+    "Water tanker supply",
+    "Pipeline repair",
+    "Water quality testing",
+    "Meter installation and replacement",
+    "Billing and payment services"
+  ],
+  "online_services": {
+    "complaint_portal": "https://www.bwssb.gov.in/complaint",
+    "bill_payment": "https://www.bwssb.gov.in/payment",
+    "new_connection": "https://www.bwssb.gov.in/connection",
+    "track_complaint": "https://www.bwssb.gov.in/track"
+  },
+  "faq": [
+    {
+      "question": "How do I register a water supply complaint?",
+      "answer": "Call BWSSB helpline 1916 or visit bwssb.gov.in. Provide your ward number, address and contact number. You will receive a complaint reference number via SMS."
+    },
+    {
+      "question": "How long will it take to restore water supply?",
+      "answer": "Water supply is restored within 48 hours of complaint. For emergencies, a water tanker is provided within 6 hours."
+    },
+    {
+      "question": "What if my complaint is not resolved in 48 hours?",
+      "answer": "Escalate to Assistant Executive Engineer at the division office. If still unresolved, escalate to Executive Engineer at the zone office."
+    },
+    {
+      "question": "How do I apply for a new water connection?",
+      "answer": "Apply online at bwssb.gov.in or visit the nearest BWSSB office. New connection provided within 30 days of application with required documents."
+    }
+  ]
+}

@@ -246,6 +246,7 @@ export default function VoiceLayout() {
   >('idle');
   const [connectMsg, setConnectMsg] = useState(0);
   const [userSpeaking, setUserSpeaking] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
 
   const connectMessages = [
     "Connecting with Agent...",
@@ -316,6 +317,17 @@ export default function VoiceLayout() {
     } else {
       setShowModal(true);
     }
+  };
+
+  // ── Mute Toggle ────────────────────────────────────────────────────────
+  const handleMuteToggle = () => {
+    setIsMuted(prev => {
+      const nextMuted = !prev;
+      if (room?.localParticipant) {
+         room.localParticipant.setMicrophoneEnabled(!nextMuted);
+      }
+      return nextMuted;
+    });
   };
 
   // ── End call ──────────────────────────────────────────────────────────
@@ -420,12 +432,19 @@ export default function VoiceLayout() {
             active={active}
             isSpeaking={userSpeaking}
             connectStatus={connectStatus}
+            isMuted={isMuted}
           />
         </div>
 
         {active && <CallTimer seconds={seconds} />}
 
-        <VoiceControls active={active} setActive={handleToggle} connectStatus={connectStatus} />
+        <VoiceControls 
+            active={active} 
+            setActive={handleToggle} 
+            connectStatus={connectStatus}
+            isMuted={isMuted}
+            onToggleMute={handleMuteToggle}
+        />
 
       </div>
 
