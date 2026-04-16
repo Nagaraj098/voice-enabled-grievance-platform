@@ -6,7 +6,7 @@ import base64
 async def test_tts():
     print("🔊 Testing Edge TTS...")
 
-    text = "https://computing-fragrance-ripe-sequences.trycloudflare.com/transcribe"
+    text = "https://pupils-general-rewards-dozen.trycloudflare.com/transcribe"
     voice = "en-IN-NeerjaNeural"
 
     communicate = edge_tts.Communicate(text, voice)

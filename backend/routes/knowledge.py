@@ -66,7 +66,7 @@
 
 # backend/routes/knowledge.py
 
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Request
 import json
 import os
 
@@ -126,6 +126,29 @@ def get_knowledge(filename: str):
         raise HTTPException(status_code=404, detail="Knowledge base not found")
     with open(path, encoding="utf-8") as f:
         return json.load(f)
+
+
+@router.put("/knowledge/{filename}")
+async def update_knowledge(filename: str, request: Request):
+    path = os.path.join(KNOWLEDGE_DIR, filename)
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="File not found")
+        
+    try:
+        data = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON payload")
+
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+
+    try:
+        from services.rag_service import rebuild_index
+        rebuild_index()
+    except Exception as e:
+        print(f"⚠️ Index rebuild failed: {e}")
+
+    return {"ok": True, "updated": filename}
 
 
 @router.delete("/knowledge/{filename}")
