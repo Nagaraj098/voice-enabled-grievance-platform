@@ -1,5 +1,6 @@
 import { Bell, Book, MessageCircleQuestion } from "lucide-react";
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Topbar() {
   const { isSignedIn } = useUser();
@@ -29,7 +30,8 @@ export default function Topbar() {
         </div>
 
         {/* User Profile / Auth */}
-        <div className="pl-2">
+        <div className="flex items-center gap-4 pl-2">
+          <ThemeToggle />
           {isSignedIn ? (
             <div className="flex items-center gap-3 hover:opacity-80 transition cursor-pointer">
               <UserButton 

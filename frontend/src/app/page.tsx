@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import ThemeToggle from "@/components/layout/ThemeToggle";
 
 export default function Home() {
   const { isSignedIn } = useAuth();
@@ -56,7 +57,7 @@ export default function Home() {
   }, [slides.length]);
 
   return (
-    <div className="min-h-screen bg-[#000000] text-white selection:bg-white/20 font-sans relative">
+    <div className="min-h-screen selection:bg-white/20 font-sans relative transition-colors duration-300" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
       {/* Background Soft Glows */}
       <div className="absolute top-[-10%] left-[10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] mix-blend-screen pointer-events-none" />
       <div className="absolute top-[20%] right-[-5%] w-[400px] h-[400px] bg-orange-500/20 rounded-full blur-[120px] mix-blend-screen pointer-events-none" />
@@ -75,7 +76,8 @@ export default function Home() {
           <Link href="#about" className="hover:text-white transition-colors">About</Link>
           <Link href="#contact" className="hover:text-white transition-colors">Contact</Link>
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
           <Link
             href="/sign-in"
             prefetch={true}
