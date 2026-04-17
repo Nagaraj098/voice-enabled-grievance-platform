@@ -385,16 +385,16 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="flex h-screen bg-[#000000] text-zinc-100 overflow-hidden font-sans">
+    <div className="flex h-screen overflow-hidden font-sans bg-white dark:bg-[#000000] text-zinc-900 dark:text-zinc-100">
       <Sidebar activePage="dashboard" />
-      <div className="flex-1 flex flex-col min-w-0 bg-[#0a0a0a]">
+      <div className="flex-1 flex flex-col min-w-0 bg-zinc-50 dark:bg-[#0a0a0a]">
         <Topbar />
-        <main className="flex-1 overflow-y-auto bg-[#000000] rounded-tl-2xl border-l border-t border-zinc-800/60 mt-2 ml-2 p-8">
+        <main className="flex-1 overflow-y-auto bg-white dark:bg-[#000000] rounded-tl-2xl border-l border-t border-zinc-200 dark:border-zinc-800/60 mt-2 ml-2 p-8">
 
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-semibold text-zinc-50">Grievance Dashboard</h1>
+              <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Grievance Dashboard</h1>
               <p className="text-xs text-zinc-500 mt-0.5">Monitor and manage AI-generated support tickets</p>
             </div>
             <div className="flex items-center gap-3">
@@ -402,7 +402,7 @@ export default function DashboardPage() {
               <button
                 onClick={fetchTickets}
                 disabled={loading}
-                className="text-xs text-zinc-500 hover:text-zinc-300 border border-zinc-800 px-3 py-1.5 rounded-lg transition-colors"
+                className="text-xs text-zinc-600 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 border border-zinc-200 dark:border-zinc-800 px-3 py-1.5 rounded-lg transition-colors"
               >
                 {loading ? "⏳ Loading..." : "🔄 Refresh"}
               </button>
@@ -420,7 +420,7 @@ export default function DashboardPage() {
               { label: "Recent Calls",     value: calls.length,   color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", icon: "📞" },
               { label: "Open Grievances",  value: totalOpen,      color: "text-amber-400",  bg: "bg-amber-500/10 border-amber-500/20",  icon: "🕐" },
             ].map((stat, i) => (
-              <div key={i} className={`flex items-center gap-4 p-5 rounded-xl border bg-zinc-900/40 ${stat.bg}`}>
+              <div key={i} className={`flex items-center gap-4 p-5 rounded-xl border bg-white dark:bg-zinc-900/40 border-zinc-200 dark:border-zinc-800/60 ${stat.bg}`}>
                 <div className={`text-2xl p-3 rounded-xl ${stat.bg}`}>{stat.icon}</div>
                 <div>
                   <p className="text-xs text-zinc-500 mb-1">{stat.label}</p>
@@ -435,7 +435,7 @@ export default function DashboardPage() {
             {/* Active Tickets */}
             <div className="col-span-3">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-semibold text-zinc-200">🎫 Active Tickets</h2>
+                <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-200">🎫 Active Tickets</h2>
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -443,15 +443,15 @@ export default function DashboardPage() {
                       value={search}
                       onChange={e => setSearch(e.target.value)}
                       placeholder="Search tickets..."
-                      className="bg-zinc-900 border border-zinc-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600 w-44"
+                      className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-900 dark:text-zinc-300 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-600 w-44"
                     />
                   </div>
                   <span className="text-xs text-zinc-600">{filtered.length} results</span>
                 </div>
               </div>
 
-              <div className="bg-zinc-900/30 border border-zinc-800/60 rounded-xl overflow-hidden">
-                <div className="grid grid-cols-12 gap-2 px-4 py-2.5 text-[10px] text-zinc-600 uppercase tracking-wider border-b border-zinc-800/60">
+              <div className="bg-white dark:bg-zinc-900/30 border border-zinc-200 dark:border-zinc-800/60 rounded-xl overflow-hidden">
+                <div className="grid grid-cols-12 gap-2 px-4 py-2.5 text-[10px] text-zinc-500 dark:text-zinc-600 uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-800/60">
                   <div className="col-span-3">User</div>
                   <div className="col-span-3">Category</div>
                   <div className="col-span-2">Severity</div>
@@ -473,7 +473,7 @@ export default function DashboardPage() {
                   filtered.map((ticket) => (
                     <div
                       key={ticket.session_id}
-                      className="grid grid-cols-12 gap-2 items-center px-4 py-3 border-b border-zinc-800/30 hover:bg-zinc-800/20 transition-colors group cursor-pointer"
+                      className="grid grid-cols-12 gap-2 items-center px-4 py-3 border-b border-zinc-100 dark:border-zinc-800/30 hover:bg-zinc-50 dark:hover:bg-zinc-800/20 transition-colors group cursor-pointer"
                       onClick={() => router.push(`/summary?sessionId=${ticket.session_id}`)}
                     >
                       <div className="col-span-3 flex items-center gap-2">
@@ -516,7 +516,7 @@ export default function DashboardPage() {
 
             {/* Recent Calls */}
             <div className="col-span-2">
-              <h2 className="text-sm font-semibold text-zinc-200 mb-4">📞 Recent Calls</h2>
+              <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-200 mb-4">📞 Recent Calls</h2>
               <div className="space-y-3">
                 {calls.length === 0 ? (
                   <div className="text-center py-8 text-zinc-600">
@@ -524,7 +524,7 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                   calls.map((call) => (
-                    <div key={call.session_id} className="bg-zinc-900/40 border border-zinc-800/60 rounded-xl p-4 hover:border-zinc-700/60 transition-colors">
+                    <div key={call.session_id} className="bg-white dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800/60 rounded-xl p-4 hover:border-zinc-300 dark:hover:border-zinc-700/60 transition-colors">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 rounded-full bg-emerald-400" />

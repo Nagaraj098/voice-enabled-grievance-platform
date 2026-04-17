@@ -6,14 +6,14 @@ export default function Topbar() {
   const { isSignedIn } = useUser();
 
   return (
-    <div className="h-14 border-b border-zinc-800 bg-[#0a0a0a] flex items-center justify-between px-6 text-zinc-300">
+    <div className="h-14 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-[#0a0a0a] flex items-center justify-between px-6 text-zinc-800 dark:text-zinc-300">
       {/* Left side if needed, currently empty for Topbar as Sidebar is fixed */}
       <div className="flex-1"></div>
 
       {/* Right side items */}
       <div className="flex items-center gap-4">
         {/* Action Buttons */}
-        <div className="flex items-center gap-1 border-r border-zinc-800 pr-4">
+        <div className="flex items-center gap-1 border-r border-zinc-200 dark:border-zinc-800 pr-4">
           <button className="group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 rounded-md transition-all duration-200 hover:scale-[1.02] active:scale-95">
             <Book size={16} className="text-zinc-500 group-hover:text-zinc-300 transition-colors" />
             <span className="hidden sm:inline">Docs</span>

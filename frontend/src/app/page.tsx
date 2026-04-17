@@ -57,7 +57,7 @@ export default function Home() {
   }, [slides.length]);
 
   return (
-    <div className="min-h-screen selection:bg-white/20 font-sans relative transition-colors duration-300" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+    <div className="min-h-screen selection:bg-white/20 font-sans relative transition-colors duration-300 bg-white dark:bg-black text-zinc-900 dark:text-zinc-100">
       {/* Background Soft Glows */}
       <div className="absolute top-[-10%] left-[10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] mix-blend-screen pointer-events-none" />
       <div className="absolute top-[20%] right-[-5%] w-[400px] h-[400px] bg-orange-500/20 rounded-full blur-[120px] mix-blend-screen pointer-events-none" />
@@ -95,7 +95,7 @@ export default function Home() {
             <span className="flex h-2 w-2 rounded-full bg-orange-500 animate-pulse"></span>
             Voice-Powered Grievance Platform
           </div>
-          <h1 className="text-5xl md:text-7xl font-semibold tracking-[-0.02em] leading-[1.1] mb-6 max-w-4xl text-transparent bg-clip-text bg-gradient-to-b from-white to-white/70 mx-auto">
+          <h1 className="text-5xl md:text-7xl font-semibold tracking-[-0.02em] leading-[1.1] mb-6 max-w-4xl text-transparent bg-clip-text bg-gradient-to-b from-gray-900 to-gray-600 dark:from-white dark:to-white/70 mx-auto">
             Grievance Redressal System
           </h1>
           <p className="text-lg md:text-xl text-zinc-400 max-w-2xl font-light leading-relaxed mb-10 mx-auto">

@@ -60,7 +60,7 @@ export default function VoiceControls({
         <button 
           onClick={onToggleMute}
           className={`px-4 py-1 border rounded text-sm transition-colors ${
-             isMuted ? 'text-red-400 border-red-800' : 'text-zinc-400 border-zinc-700 hover:text-zinc-200 hover:border-zinc-500'
+             isMuted ? 'text-red-500 dark:text-red-400 border-red-300 dark:border-red-800 bg-red-50 dark:bg-transparent' : 'text-zinc-600 dark:text-zinc-400 border-zinc-300 dark:border-zinc-700 hover:text-zinc-900 dark:hover:text-zinc-200 hover:border-zinc-400 dark:hover:border-zinc-500 hover:bg-zinc-50 dark:hover:bg-transparent'
           }`}
         >
           {isMuted ? "Unmute" : "Mute"}

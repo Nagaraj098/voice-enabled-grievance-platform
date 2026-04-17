@@ -136,10 +136,10 @@ export default function VoiceOrb({
 
       {/* Status label */}
       <div className={`text-xs font-medium transition-all duration-300 ${
-        isConnecting ? 'text-violet-400' :
-        isMuted && variant === 'user' ? 'text-red-400' :
-        isActuallySpeaking ? (variant === 'agent' ? 'text-cyan-400' : 'text-blue-400') :
-        active ? 'text-zinc-500' : 'text-zinc-700'
+        isConnecting ? 'text-violet-500 dark:text-violet-400' :
+        isMuted && variant === 'user' ? 'text-red-500 dark:text-red-400' :
+        isActuallySpeaking ? (variant === 'agent' ? 'text-cyan-600 dark:text-cyan-400' : 'text-blue-600 dark:text-blue-400') :
+        active ? 'text-zinc-500 dark:text-zinc-400' : 'text-zinc-500 dark:text-zinc-600'
       }`}>
         {isConnecting ? '⟳ Connecting...' :
          isMuted && variant === 'user' ? 'Muted' :

@@ -1,0 +1,39 @@
+{
+  "issue_category": "Electricity",
+  "severity": "high",
+  "description": "Faced an issue with the electricity link or connection",
+  "resolution_status": "Registered",
+  "user_name": "Girish",
+  "session_id": "1ae3e125-d421-4bc4-93fc-a679d7c3732a",
+  "messages": [
+    {
+      "role": "agent",
+      "text": "Hello! Welcome to the Grievance Registration System. I'm here to help you register your complaint today. May I know your full name please?"
+    },
+    {
+      "role": "user",
+      "text": "My name is Girish"
+    },
+    {
+      "role": "agent",
+      "text": "Nice to meet you, Girish! Thank you for reaching out to us. Could you tell me which category your issue falls under?\nIs it Water Supply, Electricity, Road, Sanitation, Network, or something else?"
+    },
+    {
+      "role": "user",
+      "text": "It is related to electricity"
+    },
+    {
+      "role": "agent",
+      "text": "Thank you for letting me know, Girish. Now, let's dive deeper into your electricity-related issue. Can you please describe what exactly is happening? For example, is it a problem with your supply, billing, or something else?"
+    },
+    {
+      "role": "user",
+      "text": "It is a problem with link."
+    },
+    {
+      "role": "agent",
+      "text": "I understand how frustrating that must be, Girish. Let me confirm - you're facing an issue with the electricity link or connection, is that correct?"
+    }
+  ],
+  "duration": "3m 19s"
+}

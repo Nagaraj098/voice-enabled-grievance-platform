@@ -7,14 +7,14 @@ export default function Home() {
   const router = useRouter();
 
   return (
-    <div className="flex h-screen bg-[#000000] text-zinc-100 overflow-hidden font-sans">
+    <div className="flex h-screen overflow-hidden font-sans bg-white dark:bg-[#000000] text-zinc-900 dark:text-zinc-100">
 
       <Sidebar activePage="home" />
 
-      <div className="flex-1 flex flex-col min-w-0 bg-[#0a0a0a]">
+      <div className="flex-1 flex flex-col min-w-0 bg-zinc-50 dark:bg-[#0a0a0a]">
         <Topbar />
 
-        <main className="flex-1 flex flex-col overflow-y-auto bg-[#000000] rounded-tl-2xl border-l border-t border-zinc-800/60 mt-2 ml-2">
+        <main className="flex-1 flex flex-col overflow-y-auto bg-white dark:bg-[#000000] rounded-tl-2xl border-l border-t border-zinc-200 dark:border-zinc-800/60 mt-2 ml-2">
 
           {/* Hero area */}
           <div className="flex-1 flex flex-col items-center justify-center px-8 py-16">
@@ -23,17 +23,17 @@ export default function Home() {
               {/* Animated icon */}
               <div className="relative mx-auto w-20 h-20">
                 <div className="absolute inset-0 rounded-2xl bg-blue-500/20 blur-xl animate-pulse" />
-                <div className="relative w-20 h-20 bg-gradient-to-br from-blue-500/20 to-violet-500/20 rounded-2xl border border-blue-500/30 flex items-center justify-center shadow-[0_0_40px_-10px_rgba(59,130,246,0.5)]">
+                <div className="relative w-20 h-20 bg-gradient-to-br from-blue-500/10 to-violet-500/10 dark:from-blue-500/20 dark:to-violet-500/20 rounded-2xl border border-blue-200 dark:border-blue-500/30 flex items-center justify-center shadow-[0_0_40px_-10px_rgba(59,130,246,0.3)] dark:shadow-[0_0_40px_-10px_rgba(59,130,246,0.5)]">
                   <span className="text-4xl">🎤</span>
                 </div>
               </div>
 
               {/* Title */}
               <div className="space-y-3">
-                <h1 className="text-4xl font-semibold tracking-tight text-zinc-50">
+                <h1 className="text-4xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
                   Voice AI Agent
                 </h1>
-                <p className="text-zinc-500 text-base font-light leading-relaxed max-w-md mx-auto">
+                <p className="text-zinc-500 dark:text-zinc-400 text-base font-light leading-relaxed max-w-md mx-auto">
                   Start an interactive voice session to experience next-generation conversational AI in real-time.
                 </p>
               </div>
@@ -55,8 +55,8 @@ export default function Home() {
               </div>
 
               {/* Feature pills */}
-              <div className="flex items-center justify-center gap-6 pt-6 border-t border-zinc-900">
-                <div className="flex items-center gap-2 text-xs text-zinc-600">
+              <div className="flex items-center justify-center gap-6 pt-6 border-t border-zinc-200 dark:border-zinc-900">
+                <div className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]" />
                   Ultra Low Latency
                 </div>

@@ -28,10 +28,13 @@ export default function ChatTranscript({
   const {
     messages = [],
     isThinking = false,
-    audio = null,
     isConnected = false,
     error = null,
+    speakingMessageId = null,
   } = transcriptData || {};
+
+  const audio = null;
+  const isAgentSpeaking = speakingMessageId !== null;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

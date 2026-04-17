@@ -233,6 +233,7 @@ import EndCallModal from "@/components/call/EndCallModal";
 import { connectToLiveKit } from "@/lib/livekit";
 import { useTranscript } from "@/hooks/useTranscript";
 import { Room } from "livekit-client";
+import ThemeToggle from "@/components/layout/ThemeToggle";
 
 export default function VoiceLayout() {
   const [mounted, setMounted]           = useState(false);
@@ -370,19 +371,25 @@ export default function VoiceLayout() {
   // ── Render ────────────────────────────────────────────────────────────
   if (!mounted) {
     return (
-      <div className="flex h-screen bg-black text-white items-center justify-center">
+      <div className="flex h-screen bg-white dark:bg-black text-black dark:text-white items-center justify-center relative">
+        <div className="absolute top-6 right-6 z-50">
+          <ThemeToggle />
+        </div>
         <LoadingSkeleton />
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-black text-white">
+    <div className="flex h-screen bg-white dark:bg-black text-black dark:text-white relative">
+      <div className="absolute top-6 right-6 z-50">
+        <ThemeToggle />
+      </div>
 
       {/* LEFT — History */}
-      <div className="w-1/5 border-r border-zinc-800 p-4 hidden md:block">
+      <div className="w-1/5 border-r border-zinc-200 dark:border-zinc-800 p-4 hidden md:block">
         <h2 className="font-semibold mb-3">History</h2>
-        <p className="text-sm text-gray-500">No chats yet</p>
+        <p className="text-sm text-zinc-400 dark:text-gray-500">No chats yet</p>
       </div>
 
       {/* CENTER — Orb + Controls */}
@@ -449,7 +456,7 @@ export default function VoiceLayout() {
       </div>
 
       {/* RIGHT — Transcript */}
-      <div className="w-full md:w-1/3 border-l border-zinc-800 p-4 flex flex-col bg-zinc-900">
+      <div className="w-full md:w-1/3 border-l border-zinc-200 dark:border-zinc-800 p-4 flex flex-col bg-zinc-50 dark:bg-zinc-900 mt-14 md:mt-0 pt-16 md:pt-4">
         <ChatTranscript setSpeaking={setSpeaking} />
       </div>
 
@@ -470,18 +477,18 @@ export default function VoiceLayout() {
 function LoadingSkeleton() {
   return (
     <div className="flex w-full h-full">
-      <div className="w-1/5 border-r border-zinc-800 p-4 hidden md:block animate-pulse">
-        <div className="h-6 w-24 bg-zinc-800 rounded mb-4"></div>
-        <div className="h-4 w-16 bg-zinc-800 rounded"></div>
+      <div className="w-1/5 border-r border-zinc-200 dark:border-zinc-800 p-4 hidden md:block animate-pulse">
+        <div className="h-6 w-24 bg-zinc-200 dark:bg-zinc-800 rounded mb-4"></div>
+        <div className="h-4 w-16 bg-zinc-200 dark:bg-zinc-800 rounded"></div>
       </div>
       <div className="flex-1 flex flex-col items-center justify-center gap-6 animate-pulse">
-        <div className="w-32 h-32 rounded-full bg-zinc-800"></div>
-        <div className="w-48 h-12 rounded-full bg-zinc-800 mt-8"></div>
+        <div className="w-32 h-32 rounded-full bg-zinc-200 dark:bg-zinc-800"></div>
+        <div className="w-48 h-12 rounded-full bg-zinc-200 dark:bg-zinc-800 mt-8"></div>
       </div>
-      <div className="w-full md:w-1/3 border-l border-zinc-800 p-4 flex flex-col bg-zinc-900 animate-pulse">
+      <div className="w-full md:w-1/3 border-l border-zinc-200 dark:border-zinc-800 p-4 flex flex-col bg-zinc-50 dark:bg-zinc-900 animate-pulse mt-14 md:mt-0 pt-16 md:pt-4">
         <div className="flex-1 flex flex-col justify-end gap-4 pb-4">
-          <div className="self-start w-3/4 h-16 bg-zinc-800 rounded-lg"></div>
-          <div className="self-end w-3/4 h-16 bg-zinc-700 rounded-lg"></div>
+          <div className="self-start w-3/4 h-16 bg-zinc-200 dark:bg-zinc-800 rounded-lg"></div>
+          <div className="self-end w-3/4 h-16 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
         </div>
       </div>
     </div>

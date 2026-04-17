@@ -772,52 +772,72 @@ export default function KnowledgeBase() {
                               <span className="bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full text-[10px] font-medium border border-emerald-500/20">{completed.length}</span>
                             </h3>
                           </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {completed.map(doc => (
-                              <div key={doc.id} className="group bg-[#1a1a2e]/50 hover:bg-[#1a1a2e] border border-zinc-800 hover:border-violet-500/30 rounded-xl p-4 transition-all duration-200 flex flex-col flex-wrap justify-between shadow-sm">
-                                <div>
-                                   <div className="flex items-start justify-between mb-3">
-                                     <div className="flex gap-3">
-                                        <div className="bg-zinc-900 p-2 rounded-lg border border-zinc-800 mt-1">
-                                          {typeIcon(doc.type)}
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                           <p className="text-sm text-zinc-100 font-semibold truncate leading-tight">{doc.name}</p>
-                                           <p className="text-[10px] text-zinc-500 mt-0.5">{doc.createdAt}</p>
-                                        </div>
-                                     </div>
-                                   </div>
-                                   <div className="flex items-center gap-2 mt-1 mb-4 flex-wrap">
-                                      {doc.category ? (
-                                        <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium whitespace-nowrap ${severityColor(doc.category)}`}>
-                                          {doc.category}
-                                        </span>
-                                      ) : null}
-                                      <span className="text-[10px] text-zinc-500 bg-zinc-800/50 px-2 py-0.5 rounded-full border border-zinc-800">
-                                        {doc.policies_count !== undefined ? `${doc.policies_count} rules` : doc.type === "url" ? "HTML" : "Data"}
+                          
+                          <div className="bg-[#1a1a2e]/30 border border-zinc-800/60 rounded-xl overflow-hidden">
+                            <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-zinc-900/40 border-b border-zinc-800/60 text-xs font-semibold text-zinc-400">
+                              <div className="col-span-5 sm:col-span-4">Filename</div>
+                              <div className="col-span-3 sm:col-span-2 hidden sm:block">Date</div>
+                              <div className="col-span-3">Category</div>
+                              <div className="col-span-2 hidden sm:block text-center">Rules</div>
+                              <div className="col-span-4 sm:col-span-3 text-right">Actions</div>
+                            </div>
+                            
+                            <div className="flex flex-col divide-y divide-zinc-800/40">
+                              {completed.map(doc => (
+                                <div key={doc.id} className="group grid grid-cols-12 gap-4 items-center px-4 py-3 hover:bg-violet-500/5 transition-colors">
+                                  {/* File Name & Icon */}
+                                  <div className="col-span-5 sm:col-span-4 flex items-center gap-3 overflow-hidden">
+                                    <div className="bg-zinc-900 p-1.5 rounded-md border border-zinc-800 flex-shrink-0">
+                                      {typeIcon(doc.type)}
+                                    </div>
+                                    <span className="text-sm text-zinc-200 font-medium truncate">{doc.name}</span>
+                                  </div>
+                                  
+                                  {/* Date */}
+                                  <div className="col-span-3 sm:col-span-2 hidden sm:block text-xs text-zinc-500 whitespace-nowrap">
+                                    {doc.createdAt}
+                                  </div>
+                                  
+                                  {/* Category Tag */}
+                                  <div className="col-span-3">
+                                    {doc.category ? (
+                                      <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium whitespace-nowrap overflow-hidden text-ellipsis ${severityColor(doc.category)}`}>
+                                        {doc.category}
                                       </span>
-                                   </div>
+                                    ) : (
+                                      <span className="text-zinc-600">-</span>
+                                    )}
+                                  </div>
+                                  
+                                  {/* Rules Count */}
+                                  <div className="col-span-2 hidden sm:block text-center">
+                                    <span className="text-[10px] text-zinc-400 bg-zinc-800/50 px-2 py-0.5 rounded-full border border-zinc-700/50">
+                                      {doc.policies_count !== undefined ? doc.policies_count : doc.type === "url" ? "HTML" : "Data"}
+                                    </span>
+                                  </div>
+                                  
+                                  {/* Actions */}
+                                  <div className="col-span-4 sm:col-span-3 flex items-center justify-end gap-1.5">
+                                    <button onClick={() => handleViewFile(doc)} className="p-1.5 text-zinc-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-md transition-colors" title="View">
+                                      <Icons.Eye />
+                                    </button>
+                                    <button onClick={() => handleEditFile(doc)} className="p-1.5 text-zinc-400 hover:text-amber-400 hover:bg-amber-500/10 rounded-md transition-colors" title="Edit">
+                                      <Icons.Edit />
+                                    </button>
+                                    <button onClick={() => {
+                                        const blob = new Blob([""], { type: "text/plain" }); /* Dummy placeholder if real data exists download */
+                                        const url = URL.createObjectURL(blob);
+                                        const a = document.createElement("a"); a.href = url; a.download = doc.filename || doc.name; a.click(); URL.revokeObjectURL(url);
+                                      }} className="p-1.5 text-zinc-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-md transition-colors" title="Download">
+                                      <Icons.Download />
+                                    </button>
+                                    <button onClick={() => removeDoc(doc)} className="p-1.5 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors" title="Delete">
+                                      <Icons.Trash />
+                                    </button>
+                                  </div>
                                 </div>
-                                <div className="flex items-center gap-2 border-t border-zinc-800/60 pt-3">
-                                   <button onClick={() => handleViewFile(doc)} className="flex-1 flex items-center justify-center gap-1.5 p-2 bg-zinc-900 hover:bg-blue-500/20 hover:text-blue-400 text-zinc-400 border border-zinc-800 rounded-lg transition-colors text-xs font-medium">
-                                     <Icons.Eye /> View
-                                   </button>
-                                   <button onClick={() => handleEditFile(doc)} className="flex-1 flex items-center justify-center gap-1.5 p-2 bg-zinc-900 hover:bg-amber-500/20 hover:text-amber-400 text-zinc-400 border border-zinc-800 rounded-lg transition-colors text-xs font-medium">
-                                     <Icons.Edit /> Edit
-                                   </button>
-                                   <button onClick={() => {
-                                       const blob = new Blob([""], { type: "text/plain" }); /* Dummy placeholder if real data exists download */
-                                       const url = URL.createObjectURL(blob);
-                                       const a = document.createElement("a"); a.href = url; a.download = doc.filename || doc.name; a.click(); URL.revokeObjectURL(url);
-                                     }} className="p-2 bg-zinc-900 hover:bg-emerald-500/20 hover:text-emerald-400 text-zinc-400 border border-zinc-800 rounded-lg transition-colors" title="Download">
-                                     <Icons.Download />
-                                   </button>
-                                   <button onClick={() => removeDoc(doc)} className="p-2 bg-zinc-900 hover:bg-red-500/20 hover:text-red-400 text-zinc-400 border border-zinc-800 rounded-lg transition-colors" title="Delete">
-                                     <Icons.Trash />
-                                   </button>
-                                </div>
-                              </div>
-                            ))}
+                              ))}
+                            </div>
                           </div>
                         </section>
                       );
@@ -1363,7 +1383,7 @@ export default function KnowledgeBase() {
                     onDrop={e => { 
                       e.preventDefault(); 
                       setDragging(false); 
-                      if(e.dataTransfer.files) setAddFilesList(prev => [...prev, ...Array.from(e.dataTransfer.files)]); 
+                      if(e.dataTransfer.files) setAddFilesList(prev => [...prev, ...Array.from(e.dataTransfer.files as Iterable<File> | ArrayLike<File>)]); 
                     }}
                     onClick={() => {
                         const input = document.createElement("input");
@@ -1371,7 +1391,7 @@ export default function KnowledgeBase() {
                         input.multiple = true;
                         input.accept = ".pdf,.txt,.csv,.docx,.json";
                         input.onchange = (ev: any) => {
-                            if(ev.target.files) setAddFilesList(prev => [...prev, ...Array.from(ev.target.files)]);
+                            if(ev.target.files) setAddFilesList(prev => [...prev, ...Array.from(ev.target.files as Iterable<File> | ArrayLike<File>)]);
                         };
                         input.click();
                     }}
