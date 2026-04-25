@@ -5,21 +5,21 @@ import Link from "next/link";
 
 export default function Sidebar({ activePage = "home" }: { activePage?: 'home' | 'call' | 'knowledge-base' | 'summary' | 'dashboard' | 'settings' }) {
   return (
-    <div className="w-60 bg-zinc-50 dark:bg-[#0a0a0a] border-r border-zinc-200 dark:border-zinc-800/60 p-4 flex flex-col h-full text-zinc-800 dark:text-zinc-300">
+    <div className="w-60 bg-zinc-50 dark:bg-background border-r border-zinc-200 dark:border-border/60 p-4 flex flex-col h-full text-zinc-800 dark:text-foreground">
       
       {/* Logo */}
       <div className="flex items-center gap-2.5 mb-8 px-2">
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-          <span className="text-white font-bold text-sm">V</span>
+          <span className="text-foreground font-bold text-sm">V</span>
         </div>
-        <span className="font-semibold text-zinc-900 dark:text-zinc-100 text-base tracking-tight">GRS</span>
+        <span className="font-semibold text-zinc-900 dark:text-foreground text-base tracking-tight">GRS</span>
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-6 scrollbar-hide">
         
         {/* Main Section */}
         <nav className="space-y-0.5">
-          <Link href="/dashboard" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${activePage === 'dashboard' ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}>
+          <Link href="/dashboard" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${activePage === 'dashboard' ? 'bg-card text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-card/50'}`}>
             <LayoutDashboard size={16} />
             Dashboard
           </Link>
@@ -32,7 +32,7 @@ export default function Sidebar({ activePage = "home" }: { activePage?: 'home' |
 
         {/* Monitor Section */}
         <div>
-          <div className="text-[10px] font-semibold text-zinc-600 mb-2 px-3 uppercase tracking-widest">Monitor</div>
+          <div className="text-[10px] font-semibold text-muted-foreground mb-2 px-3 uppercase tracking-widest">Monitor</div>
           <nav className="space-y-0.5">
             <NavItem icon={<MessageSquare size={16} />} label="Conversations" accent="blue" />
             <NavItem icon={<Users size={16} />} label="Users" accent="violet" />
@@ -42,7 +42,7 @@ export default function Sidebar({ activePage = "home" }: { activePage?: 'home' |
       </div>
 
       {/* Bottom */}
-      <div className="pt-4 border-t border-zinc-800/60 px-1 space-y-0.5">
+      <div className="pt-4 border-t border-border/60 px-1 space-y-0.5">
         <NavItem 
           icon={<Settings size={16} />} 
           label="Settings" 
@@ -50,11 +50,11 @@ export default function Sidebar({ activePage = "home" }: { activePage?: 'home' |
           accent="blue"
           href="/settings"
         />
-        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-zinc-800/40 transition-colors cursor-pointer">
-          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-[10px] font-bold text-white">U</div>
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-card/40 transition-colors cursor-pointer">
+          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-[10px] font-bold text-foreground">U</div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-zinc-300 truncate">My Account</p>
-            <p className="text-[10px] text-zinc-600 truncate">user@email.com</p>
+            <p className="text-xs font-medium text-foreground truncate">My Account</p>
+            <p className="text-[10px] text-muted-foreground truncate">user@email.com</p>
           </div>
         </div>
       </div>
@@ -92,11 +92,11 @@ function NavItem({
       className={`group w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all duration-150 ${
         active
           ? `${a.bg} ${a.text} font-medium ring-1 ${a.ring}`
-          : "text-zinc-500 hover:bg-zinc-800/50 hover:text-zinc-200"
+          : "text-muted-foreground hover:bg-card/50 hover:text-foreground"
       }`}
     >
       <div className="flex items-center gap-3">
-        <span className={`transition-colors ${active ? a.icon : "text-zinc-600 group-hover:text-zinc-400"}`}>
+        <span className={`transition-colors ${active ? a.icon : "text-muted-foreground group-hover:text-muted-foreground"}`}>
           {icon}
         </span>
         <span>{label}</span>

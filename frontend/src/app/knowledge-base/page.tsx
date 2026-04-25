@@ -489,7 +489,7 @@ export default function KnowledgeBase() {
     const fileUrl = `${API_BASE}/knowledge/${selectedFile.filename || selectedFile.id}`;
 
     if (fileType === 'image') {
-      return <div className="h-full flex items-center justify-center p-4 bg-zinc-900/50 rounded-xl"><img src={fileUrl} alt={selectedFile.name} className="max-w-full max-h-full rounded-lg shadow-lg border border-zinc-800" /></div>;
+      return <div className="h-full flex items-center justify-center p-4 bg-background rounded-xl"><img src={fileUrl} alt={selectedFile.name} className="max-w-full max-h-full rounded-lg shadow-lg border border-border" /></div>;
     }
     
     if (fileType === 'pdf') {
@@ -497,25 +497,25 @@ export default function KnowledgeBase() {
     }
     
     if (fileType === 'csv') {
-      if (!content || typeof content !== 'string') return <p className="text-zinc-400">Invalid CSV content</p>;
+      if (!content || typeof content !== 'string') return <p className="text-muted-foreground">Invalid CSV content</p>;
       const rows = content.split('\n').map(r => r.trim()).filter(Boolean);
       return (
-        <div className="overflow-x-auto overflow-y-auto h-full w-full border border-zinc-800 rounded-lg bg-[#0a0a0a]">
-          <table className="w-full text-left text-sm whitespace-nowrap text-zinc-300">
+        <div className="overflow-x-auto overflow-y-auto h-full w-full border border-border rounded-lg bg-background">
+          <table className="w-full text-left text-sm whitespace-nowrap text-foreground">
             <thead>
               {rows.length > 0 && (
-                <tr className="bg-zinc-800 border-b border-zinc-700">
+                <tr className="bg-card border-b border-border">
                    {rows[0].split(',').map((cell, i) => (
-                     <th key={i} className="px-4 py-3 font-medium text-zinc-100">{cell}</th>
+                     <th key={i} className="px-4 py-3 font-medium text-foreground">{cell}</th>
                    ))}
                 </tr>
               )}
             </thead>
             <tbody>
                {rows.slice(1).map((row, i) => (
-                 <tr key={i} className={i % 2 === 0 ? "bg-zinc-900/40 hover:bg-zinc-800/60" : "bg-transparent hover:bg-zinc-800/60"}>
+                 <tr key={i} className={i % 2 === 0 ? "bg-background/40 hover:bg-card/60" : "bg-transparent hover:bg-card/60"}>
                    {row.split(',').map((cell, j) => (
-                     <td key={j} className="px-4 py-2 border-b border-zinc-800/30 text-zinc-400">{cell}</td>
+                     <td key={j} className="px-4 py-2 border-b border-border/30 text-muted-foreground">{cell}</td>
                    ))}
                  </tr>
                ))}
@@ -527,8 +527,8 @@ export default function KnowledgeBase() {
     
     if (fileType === 'text') {
       return (
-        <div className="h-full w-full overflow-auto bg-[#0a0a0a] rounded-lg border border-zinc-800">
-          <pre className="text-zinc-300 whitespace-pre-wrap font-mono text-sm leading-relaxed p-6">{String(content)}</pre>
+        <div className="h-full w-full overflow-auto bg-background rounded-lg border border-border">
+          <pre className="text-foreground whitespace-pre-wrap font-mono text-sm leading-relaxed p-6">{String(content)}</pre>
         </div>
       );
     }
@@ -537,7 +537,7 @@ export default function KnowledgeBase() {
       if (viewerTab === 'raw') {
         const rawJson = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
         return (
-          <div className="h-full w-full overflow-auto bg-[#0a0a0a] rounded-lg border border-zinc-800">
+          <div className="h-full w-full overflow-auto bg-muted rounded-xl border border-border">
             <pre 
               className="font-mono text-sm p-6 leading-relaxed"
               dangerouslySetInnerHTML={{ __html: highlightJson(rawJson) }}
@@ -550,38 +550,51 @@ export default function KnowledgeBase() {
 
         if (policies && policies.length > 0) {
           return (
-            <div className="space-y-4">
-              {policies.map((item: any, idx: number) => (
-                <div key={idx} className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex flex-col gap-2 shadow-inner">
-                  <div className="flex gap-3 items-start text-zinc-200 font-medium">
-                    <span className="text-violet-400 mt-0.5 whitespace-nowrap">Rule {idx + 1}:</span>
-                    <span className="flex-1 leading-relaxed">{item.rule || item.title || item.name || "Untitled Rule"}</span>
-                  </div>
-                  {(item.description || item.desc) && (
-                    <div className="flex gap-3 items-start text-zinc-400 text-xs mt-1">
-                      <span className="text-zinc-500 w-12 shrink-0 font-sans tracking-wide">DESC:</span>
-                      <span className="flex-1 leading-relaxed text-sm">{item.description || item.desc}</span>
-                    </div>
-                  )}
-                </div>
-              ))}
+            <div className="h-full w-full overflow-auto bg-background rounded-xl border border-border">
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-muted sticky top-0 z-10 border-b border-border shadow-sm">
+                  <tr>
+                    <th className="px-4 py-3 text-xs font-semibold text-muted-foreground w-16">#</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-muted-foreground w-[45%]">Rule / Policy</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-muted-foreground">Details</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {policies.map((item: any, idx: number) => (
+                    <tr key={idx} className={idx % 2 === 0 ? "bg-background" : "bg-card"}>
+                      <td className="px-4 py-4 align-top">
+                        <span className="inline-flex items-center justify-center min-w-[24px] h-6 px-2 text-[11px] font-medium text-muted-foreground bg-muted border border-border rounded-full">
+                          {item.id || idx + 1}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 align-top text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                        {item.rule || item.title || item.name || "Untitled Rule"}
+                      </td>
+                      <td className="px-4 py-4 align-top text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                        {item.description || item.desc || item.details || "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           );
         }
 
         return (
-          <div className="text-center py-20 bg-zinc-900/30 rounded-xl border border-dashed border-zinc-800">
-            <p className="text-zinc-500 font-sans">No structured rules found. Switch to "Raw JSON" tab to view content.</p>
+          <div className="text-center py-20 bg-muted/50 rounded-xl border border-dashed border-border flex flex-col items-center justify-center gap-2">
+            <p className="text-muted-foreground text-sm font-medium">No structured rules found.</p>
+            <p className="text-xs text-muted-foreground">Switch to "Raw JSON" tab to view content.</p>
           </div>
         );
       }
     }
 
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-3 border border-dashed border-zinc-800/60 rounded-xl bg-zinc-900/20">
-         <span className="text-zinc-600"><Icons.File /></span>
-         <p className="text-zinc-500 font-sans font-medium">Preview not available for this file type.</p>
-         <button onClick={() => window.open(fileUrl, '_blank')} className="px-5 py-2 mt-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-sm flex gap-2 items-center transition-colors shadow-sm">
+      <div className="flex flex-col items-center justify-center h-full gap-3 border border-dashed border-border/60 rounded-xl bg-background/20">
+         <span className="text-muted-foreground"><Icons.File /></span>
+         <p className="text-muted-foreground font-sans font-medium">Preview not available for this file type.</p>
+         <button onClick={() => window.open(fileUrl, '_blank')} className="px-5 py-2 mt-2 bg-card hover:bg-card text-foreground rounded-lg text-sm flex gap-2 items-center transition-colors shadow-sm">
            <Icons.Download /> Download File directly
          </button>
       </div>
@@ -614,7 +627,7 @@ export default function KnowledgeBase() {
   };
 
   const severityColor = (category?: string) => {
-    if (!category) return "text-zinc-500 bg-zinc-800 border-zinc-700";
+    if (!category) return "text-muted-foreground bg-card border-border";
     const c = category.toLowerCase();
     if (c.includes("water")) return "text-blue-400 bg-blue-500/10 border-blue-500/20";
     if (c.includes("road")) return "text-amber-400 bg-amber-500/10 border-amber-500/20";
@@ -623,11 +636,11 @@ export default function KnowledgeBase() {
   };
 
   return (
-    <div className="flex h-screen bg-[#000000] text-zinc-100 overflow-hidden font-sans">
+    <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
       <Sidebar activePage="knowledge-base" />
-      <div className="flex-1 flex flex-col min-w-0 bg-[#0a0a0a]">
+      <div className="flex-1 flex flex-col min-w-0 bg-background">
         <Topbar />
-        <main className="flex-1 flex flex-col overflow-y-auto bg-[#000000] rounded-tl-2xl border-l border-t border-zinc-800/60 mt-2 ml-2 p-8">
+        <main className="flex-1 flex flex-col overflow-y-auto bg-background rounded-tl-2xl border-l border-t border-border/60 mt-2 ml-2 p-8">
 
           {/* Toast */}
           {toast && (
@@ -648,19 +661,19 @@ export default function KnowledgeBase() {
           {/* Header */}
           <div className="flex items-center justify-between mb-2">
             <div>
-              <h1 className="text-2xl font-semibold text-zinc-50">Knowledge Base</h1>
-              <p className="text-xs text-zinc-600 mt-0.5">Manage documents and data sources for the AI agent</p>
+              <h1 className="text-2xl font-semibold text-foreground">Knowledge Base</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">Manage documents and data sources for the AI agent</p>
             </div>
             {activeTab === 'view' && (
               <div className="flex items-center gap-3">
                 <button
                   onClick={fetchDocs}
                   disabled={loading}
-                  className="p-2 rounded-lg border border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600 transition-all"
+                  className="p-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-border transition-all"
                 >
                   <span className={loading ? "animate-spin inline-block" : ""}><Icons.Refresh /></span>
                 </button>
-                <div className="flex items-center gap-2 text-xs text-zinc-500">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]" />
                   {docs.length} documents
                 </div>
@@ -669,11 +682,11 @@ export default function KnowledgeBase() {
           </div>
 
           {/* Tab Bar */}
-          <div className="flex items-center gap-6 border-b border-zinc-800/80 mb-6">
+          <div className="flex items-center gap-6 border-b border-border/80 mb-6">
             <button
               onClick={() => setActiveTab('upload')}
               className={`flex items-center gap-2 pb-3 px-1 text-sm font-medium transition-colors relative ${
-                activeTab === 'upload' ? 'text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'
+                activeTab === 'upload' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <Icons.CloudUpload />
@@ -685,7 +698,7 @@ export default function KnowledgeBase() {
             <button
               onClick={() => setActiveTab('view')}
               className={`flex items-center gap-2 pb-3 px-1 text-sm font-medium transition-colors relative ${
-                activeTab === 'view' ? 'text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'
+                activeTab === 'view' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <Icons.LayoutGrid />
@@ -700,12 +713,12 @@ export default function KnowledgeBase() {
             <div className="flex-1 overflow-y-auto">
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-8">
                 {[
-                  { icon: <span className="text-blue-400"><Icons.Globe /></span>, label: "Add URL", bg: "bg-blue-500/10 border-blue-500/20 hover:bg-blue-500/20", onClick: () => setShowUrlModal(true) },
-                  { icon: <span className="text-violet-400"><Icons.Upload /></span>, label: "Upload JSON", bg: "bg-violet-500/10 border-violet-500/20 hover:bg-violet-500/20", onClick: () => setShowUploadModal(true) },
-                  { icon: <span className="text-amber-400"><Icons.FileJson /></span>, label: "Sample JSONs", bg: "bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/20", onClick: () => setShowSampleModal(true) },
-                  { icon: <span className="text-emerald-400"><Icons.Database /></span>, label: "Connect to DB", bg: "bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20", onClick: () => setShowDbModal(true) },
-                  { icon: <span className="text-[#60a5fa]"><Icons.FolderOpen /></span>, label: "Add Files", bg: "bg-[#0f1f35] border-blue-900/40 hover:bg-[#1a2d48]", onClick: () => setShowAddFilesModal(true) },
-                  { icon: <span className="text-[#34d399]"><Icons.FileText /></span>, label: "Add Text", bg: "bg-[#0f2820] border-emerald-900/40 hover:bg-[#15362b]", onClick: () => setShowAddTextModal(true) },
+                  { icon: <span className="text-blue-400"><Icons.Globe /></span>, label: "Add URL", bg: "bg-card border-border hover:bg-card/80", onClick: () => setShowUrlModal(true) },
+                  { icon: <span className="text-violet-400"><Icons.Upload /></span>, label: "Upload JSON", bg: "bg-card border-border hover:bg-card/80", onClick: () => setShowUploadModal(true) },
+                  { icon: <span className="text-amber-400"><Icons.FileJson /></span>, label: "Sample JSONs", bg: "bg-card border-border hover:bg-card/80", onClick: () => setShowSampleModal(true) },
+                  { icon: <span className="text-emerald-400"><Icons.Database /></span>, label: "Connect to DB", bg: "bg-card border-border hover:bg-card/80", onClick: () => setShowDbModal(true) },
+                  { icon: <span className="text-[#60a5fa]"><Icons.FolderOpen /></span>, label: "Add Files", bg: "bg-card border-border hover:bg-card/80", onClick: () => setShowAddFilesModal(true) },
+                  { icon: <span className="text-[#34d399]"><Icons.FileText /></span>, label: "Add Text", bg: "bg-card border-border hover:bg-card/80", onClick: () => setShowAddTextModal(true) },
                 ].map((item, i) => (
                   <button
                     key={i}
@@ -713,7 +726,7 @@ export default function KnowledgeBase() {
                     className={`flex flex-col items-center justify-center gap-3 p-5 rounded-xl border transition-all duration-200 hover:scale-[1.02] active:scale-95 ${item.bg}`}
                   >
                     {item.icon}
-                    <span className="text-sm font-medium text-zinc-300">{item.label}</span>
+                    <span className="text-sm font-medium text-foreground">{item.label}</span>
                   </button>
                 ))}
               </div>
@@ -725,12 +738,12 @@ export default function KnowledgeBase() {
               {/* Search */}
               <div className="flex items-center gap-3 mb-6">
                 <div className="flex-1 relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600"><Icons.Search /></span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"><Icons.Search /></span>
                   <input
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     placeholder="Search knowledge base..."
-                    className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg pl-9 pr-4 py-2.5 text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600 transition-colors"
+                    className="w-full bg-background border border-border rounded-lg pl-9 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-border transition-colors"
                   />
                 </div>
               </div>
@@ -746,16 +759,16 @@ export default function KnowledgeBase() {
               >
                 {loading ? (
                   <div className="flex flex-col items-center justify-center h-full py-20 gap-3">
-                    <span className="animate-spin inline-block text-zinc-600"><Icons.Refresh /></span>
-                    <p className="text-zinc-600 text-sm">Loading knowledge base...</p>
+                    <span className="animate-spin inline-block text-muted-foreground"><Icons.Refresh /></span>
+                    <p className="text-muted-foreground text-sm">Loading knowledge base...</p>
                   </div>
                 ) : filtered.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full py-20 gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-                      <span className="text-zinc-600"><Icons.FileText /></span>
+                    <div className="w-12 h-12 rounded-xl bg-background border border-border flex items-center justify-center">
+                      <span className="text-muted-foreground"><Icons.FileText /></span>
                     </div>
                     <div className="text-center">
-                      <p className="text-zinc-400 font-medium">No documents found</p>
+                      <p className="text-muted-foreground font-medium">No documents found</p>
                     </div>
                   </div>
                 ) : (
@@ -767,14 +780,14 @@ export default function KnowledgeBase() {
                       return (
                         <section>
                           <div className="flex items-center gap-2 mb-4 px-1">
-                            <h3 className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
+                            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                               ✅ Completed
                               <span className="bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full text-[10px] font-medium border border-emerald-500/20">{completed.length}</span>
                             </h3>
                           </div>
                           
-                          <div className="bg-[#1a1a2e]/30 border border-zinc-800/60 rounded-xl overflow-hidden">
-                            <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-zinc-900/40 border-b border-zinc-800/60 text-xs font-semibold text-zinc-400">
+                          <div className="bg-card border border-border/60 rounded-xl overflow-hidden">
+                            <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-background/40 border-b border-border/60 text-xs font-semibold text-muted-foreground">
                               <div className="col-span-5 sm:col-span-4">Filename</div>
                               <div className="col-span-3 sm:col-span-2 hidden sm:block">Date</div>
                               <div className="col-span-3">Category</div>
@@ -787,14 +800,14 @@ export default function KnowledgeBase() {
                                 <div key={doc.id} className="group grid grid-cols-12 gap-4 items-center px-4 py-3 hover:bg-violet-500/5 transition-colors">
                                   {/* File Name & Icon */}
                                   <div className="col-span-5 sm:col-span-4 flex items-center gap-3 overflow-hidden">
-                                    <div className="bg-zinc-900 p-1.5 rounded-md border border-zinc-800 flex-shrink-0">
+                                    <div className="bg-background p-1.5 rounded-md border border-border flex-shrink-0">
                                       {typeIcon(doc.type)}
                                     </div>
-                                    <span className="text-sm text-zinc-200 font-medium truncate">{doc.name}</span>
+                                    <span className="text-sm text-foreground font-medium truncate">{doc.name}</span>
                                   </div>
                                   
                                   {/* Date */}
-                                  <div className="col-span-3 sm:col-span-2 hidden sm:block text-xs text-zinc-500 whitespace-nowrap">
+                                  <div className="col-span-3 sm:col-span-2 hidden sm:block text-xs text-muted-foreground whitespace-nowrap">
                                     {doc.createdAt}
                                   </div>
                                   
@@ -805,33 +818,33 @@ export default function KnowledgeBase() {
                                         {doc.category}
                                       </span>
                                     ) : (
-                                      <span className="text-zinc-600">-</span>
+                                      <span className="text-muted-foreground">-</span>
                                     )}
                                   </div>
                                   
                                   {/* Rules Count */}
                                   <div className="col-span-2 hidden sm:block text-center">
-                                    <span className="text-[10px] text-zinc-400 bg-zinc-800/50 px-2 py-0.5 rounded-full border border-zinc-700/50">
+                                    <span className="text-[10px] text-muted-foreground bg-card/50 px-2 py-0.5 rounded-full border border-border/50">
                                       {doc.policies_count !== undefined ? doc.policies_count : doc.type === "url" ? "HTML" : "Data"}
                                     </span>
                                   </div>
                                   
                                   {/* Actions */}
                                   <div className="col-span-4 sm:col-span-3 flex items-center justify-end gap-1.5">
-                                    <button onClick={() => handleViewFile(doc)} className="p-1.5 text-zinc-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-md transition-colors" title="View">
+                                    <button onClick={() => handleViewFile(doc)} className="p-1.5 text-muted-foreground hover:text-blue-400 hover:bg-blue-500/10 rounded-md transition-colors" title="View">
                                       <Icons.Eye />
                                     </button>
-                                    <button onClick={() => handleEditFile(doc)} className="p-1.5 text-zinc-400 hover:text-amber-400 hover:bg-amber-500/10 rounded-md transition-colors" title="Edit">
+                                    <button onClick={() => handleEditFile(doc)} className="p-1.5 text-muted-foreground hover:text-amber-400 hover:bg-amber-500/10 rounded-md transition-colors" title="Edit">
                                       <Icons.Edit />
                                     </button>
                                     <button onClick={() => {
                                         const blob = new Blob([""], { type: "text/plain" }); /* Dummy placeholder if real data exists download */
                                         const url = URL.createObjectURL(blob);
                                         const a = document.createElement("a"); a.href = url; a.download = doc.filename || doc.name; a.click(); URL.revokeObjectURL(url);
-                                      }} className="p-1.5 text-zinc-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-md transition-colors" title="Download">
+                                      }} className="p-1.5 text-muted-foreground hover:text-emerald-400 hover:bg-emerald-500/10 rounded-md transition-colors" title="Download">
                                       <Icons.Download />
                                     </button>
-                                    <button onClick={() => removeDoc(doc)} className="p-1.5 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors" title="Delete">
+                                    <button onClick={() => removeDoc(doc)} className="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors" title="Delete">
                                       <Icons.Trash />
                                     </button>
                                   </div>
@@ -849,37 +862,37 @@ export default function KnowledgeBase() {
                         return (
                           <section>
                             <div className="flex items-center gap-2 mb-4 px-1">
-                              <h3 className="text-sm font-semibold text-zinc-400 flex items-center gap-2">
+                              <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
                                 ⏳ In Progress
-                                <span className="bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded-full text-[10px] font-medium border border-zinc-700">{inProgress.length}</span>
+                                <span className="bg-card text-foreground px-2 py-0.5 rounded-full text-[10px] font-medium border border-border">{inProgress.length}</span>
                               </h3>
                             </div>
                             
                             {inProgress.length === 0 ? (
-                              <div className="rounded-xl border border-dashed border-zinc-800 bg-zinc-900/30 p-6 flex flex-col items-center justify-center gap-2">
-                                <span className="text-zinc-600"><Icons.Alert /></span>
-                                <p className="text-xs text-zinc-500 font-medium">No files currently processing</p>
+                              <div className="rounded-xl border border-dashed border-border bg-background/30 p-6 flex flex-col items-center justify-center gap-2">
+                                <span className="text-muted-foreground"><Icons.Alert /></span>
+                                <p className="text-xs text-muted-foreground font-medium">No files currently processing</p>
                               </div>
                             ) : (
                                <div className="space-y-3">
                                  {inProgress.map(doc => (
-                                   <div key={doc.id} className="flex flex-col sm:flex-row sm:items-center gap-4 bg-zinc-900/60 border border-zinc-800 rounded-xl p-4">
-                                      <div className="w-10 h-10 rounded-lg bg-zinc-800/80 flex items-center justify-center flex-shrink-0 border border-zinc-700">
-                                         <span className="text-zinc-400 animate-pulse">{typeIcon(doc.type)}</span>
+                                   <div key={doc.id} className="flex flex-col sm:flex-row sm:items-center gap-4 bg-background/60 border border-border rounded-xl p-4">
+                                      <div className="w-10 h-10 rounded-lg bg-card/80 flex items-center justify-center flex-shrink-0 border border-border">
+                                         <span className="text-muted-foreground animate-pulse">{typeIcon(doc.type)}</span>
                                       </div>
                                       <div className="flex-1 min-w-0">
                                          <div className="flex items-center gap-3 mb-1">
-                                            <p className="text-sm font-semibold text-zinc-200 truncate">{doc.name}</p>
-                                            {doc.category && <span className="text-[10px] text-zinc-500 border border-zinc-700 rounded-full px-2">{doc.category}</span>}
+                                            <p className="text-sm font-semibold text-foreground truncate">{doc.name}</p>
+                                            {doc.category && <span className="text-[10px] text-muted-foreground border border-border rounded-full px-2">{doc.category}</span>}
                                          </div>
                                          <div className="flex items-center gap-3 mt-2">
-                                            <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden relative">
+                                            <div className="flex-1 h-1.5 bg-card rounded-full overflow-hidden relative">
                                                 <div className="h-full bg-violet-500 rounded-full animate-[pulse_1.5s_ease-in-out_infinite] w-[60%]" />
                                             </div>
-                                            <span className="text-[10px] text-zinc-400 whitespace-nowrap capitalize w-16">{doc.status}...</span>
+                                            <span className="text-[10px] text-muted-foreground whitespace-nowrap capitalize w-16">{doc.status}...</span>
                                          </div>
                                       </div>
-                                      <div className="text-xs text-zinc-600 flex-shrink-0 text-right">
+                                      <div className="text-xs text-muted-foreground flex-shrink-0 text-right">
                                          <p>{doc.createdAt}</p>
                                       </div>
                                    </div>
@@ -907,34 +920,34 @@ export default function KnowledgeBase() {
 
           {/* Upload Modal */}
           {showUploadModal && (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-                <h2 className="text-base font-semibold text-zinc-100 mb-1">Upload JSON File</h2>
-                <p className="text-xs text-zinc-500 mb-5">Upload grievance JSON files to the knowledge base</p>
+            <div className="fixed inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center z-50">
+              <div className="bg-background border border-border rounded-2xl p-6 w-full max-w-md shadow-2xl">
+                <h2 className="text-base font-semibold text-foreground mb-1">Upload JSON File</h2>
+                <p className="text-xs text-muted-foreground mb-5">Upload grievance JSON files to the knowledge base</p>
                 <div
                   className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 cursor-pointer ${
-                    dragging ? 'border-violet-500/70 bg-violet-500/10' : 'border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800/30'
+                    dragging ? 'border-violet-500/70 bg-violet-500/10' : 'border-border hover:border-zinc-500 hover:bg-card/30'
                   }`}
                   onDragOver={e => { e.preventDefault(); setDragging(true); }}
                   onDragLeave={() => setDragging(false)}
                   onDrop={e => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files); }}
                   onClick={() => fileRef.current?.click()}
                 >
-                  <span className="text-zinc-500 flex justify-center mb-3"><Icons.Upload /></span>
-                  <p className="text-sm text-zinc-300 font-medium mb-1">Click to browse or drag JSON files here</p>
-                  <p className="text-xs text-zinc-600">Only .json files are supported</p>
+                  <span className="text-muted-foreground flex justify-center mb-3"><Icons.Upload /></span>
+                  <p className="text-sm text-foreground font-medium mb-1">Click to browse or drag JSON files here</p>
+                  <p className="text-xs text-muted-foreground">Only .json files are supported</p>
                 </div>
                 {uploading && (
-                  <div className="flex items-center gap-2 mt-4 text-xs text-zinc-400">
+                  <div className="flex items-center gap-2 mt-4 text-xs text-muted-foreground">
                     <span className="animate-spin inline-block"><Icons.Refresh /></span>
                     Uploading to backend...
                   </div>
                 )}
                 <div className="flex gap-3 justify-end mt-5">
-                  <button onClick={() => setShowUploadModal(false)} className="px-4 py-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors">Close</button>
+                  <button onClick={() => setShowUploadModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">Close</button>
                   <button
                     onClick={() => fileRef.current?.click()}
-                    className="px-5 py-2 bg-violet-600 hover:bg-violet-500 text-white text-sm rounded-lg font-medium transition-colors flex items-center gap-2"
+                    className="px-5 py-2 bg-violet-600 hover:bg-violet-500 text-foreground text-sm rounded-lg font-medium transition-colors flex items-center gap-2"
                   >
                     <Icons.Upload />
                     Browse Files
@@ -946,17 +959,17 @@ export default function KnowledgeBase() {
 
           {/* Sample JSON Modal */}
           {showSampleModal && (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 w-full max-w-2xl shadow-2xl max-h-[85vh] overflow-y-auto">
-                <h2 className="text-base font-semibold text-zinc-100 mb-1">Sample Grievance JSONs</h2>
-                <p className="text-xs text-zinc-500 mb-5">Pre-built templates — click Upload to add directly to your backend knowledge base</p>
+            <div className="fixed inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center z-50">
+              <div className="bg-background border border-border rounded-2xl p-6 w-full max-w-2xl shadow-2xl max-h-[85vh] overflow-y-auto">
+                <h2 className="text-base font-semibold text-foreground mb-1">Sample Grievance JSONs</h2>
+                <p className="text-xs text-muted-foreground mb-5">Pre-built templates — click Upload to add directly to your backend knowledge base</p>
                 <div className="space-y-4">
                   {SAMPLE_JSONS.map((sample, i) => (
-                    <div key={i} className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl p-4">
+                    <div key={i} className="bg-card/50 border border-border/50 rounded-xl p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <span className="text-amber-400"><Icons.FileJson /></span>
-                          <span className="text-sm font-medium text-zinc-200">{sample.title}</span>
+                          <span className="text-sm font-medium text-foreground">{sample.title}</span>
                           <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${sample.color}`}>
                             {sample.tag}
                           </span>
@@ -964,20 +977,20 @@ export default function KnowledgeBase() {
                         <button
                           onClick={() => uploadSampleJson(sample)}
                           disabled={uploading}
-                          className="text-xs px-3 py-1.5 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center gap-1.5"
+                          className="text-xs px-3 py-1.5 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-foreground rounded-lg font-medium transition-colors flex items-center gap-1.5"
                         >
                           {uploading ? <span className="animate-spin inline-block"><Icons.Refresh /></span> : <Icons.Upload />}
                           Upload to KB
                         </button>
                       </div>
-                      <pre className="text-xs text-zinc-400 bg-zinc-900 rounded-lg p-3 overflow-x-auto max-h-36 overflow-y-auto border border-zinc-800">
+                      <pre className="text-xs text-muted-foreground bg-background rounded-lg p-3 overflow-x-auto max-h-36 overflow-y-auto border border-border">
                         {JSON.stringify(sample.json, null, 2)}
                       </pre>
                     </div>
                   ))}
                 </div>
                 <div className="flex justify-end mt-5">
-                  <button onClick={() => setShowSampleModal(false)} className="px-4 py-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors">Close</button>
+                  <button onClick={() => setShowSampleModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">Close</button>
                 </div>
               </div>
             </div>
@@ -985,18 +998,18 @@ export default function KnowledgeBase() {
 
           {/* URL Modal */}
           {showUrlModal && (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-                <h2 className="text-base font-semibold text-zinc-100 mb-4">Add URL</h2>
+            <div className="fixed inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center z-50">
+              <div className="bg-background border border-border rounded-2xl p-6 w-full max-w-md shadow-2xl">
+                <h2 className="text-base font-semibold text-foreground mb-4">Add URL</h2>
                 <input
                   value={urlInput}
                   onChange={e => setUrlInput(e.target.value)}
                   placeholder="https://example.com"
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2.5 text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 mb-4"
+                  className="w-full bg-card border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-zinc-500 mb-4"
                 />
                 <div className="flex gap-3 justify-end">
-                  <button onClick={() => setShowUrlModal(false)} className="px-4 py-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors">Cancel</button>
-                  <button onClick={handleAddUrl} className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-lg font-medium transition-colors">Add</button>
+                  <button onClick={() => setShowUrlModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
+                  <button onClick={handleAddUrl} className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-foreground text-sm rounded-lg font-medium transition-colors">Add</button>
                 </div>
               </div>
             </div>
@@ -1004,36 +1017,36 @@ export default function KnowledgeBase() {
 
           {/* DB Modal */}
           {showDbModal && (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-                <h2 className="text-base font-semibold text-zinc-100 mb-1">Connect to Database</h2>
-                <p className="text-xs text-zinc-500 mb-5">Enter your database connection details</p>
+            <div className="fixed inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center z-50">
+              <div className="bg-background border border-border rounded-2xl p-6 w-full max-w-md shadow-2xl">
+                <h2 className="text-base font-semibold text-foreground mb-1">Connect to Database</h2>
+                <p className="text-xs text-muted-foreground mb-5">Enter your database connection details</p>
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs text-zinc-500 mb-1 block">Host</label>
-                      <input value={dbConfig.host} onChange={e => setDbConfig(p => ({...p, host: e.target.value}))} placeholder="localhost" className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500" />
+                      <label className="text-xs text-muted-foreground mb-1 block">Host</label>
+                      <input value={dbConfig.host} onChange={e => setDbConfig(p => ({...p, host: e.target.value}))} placeholder="localhost" className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-zinc-500" />
                     </div>
                     <div>
-                      <label className="text-xs text-zinc-500 mb-1 block">Port</label>
-                      <input value={dbConfig.port} onChange={e => setDbConfig(p => ({...p, port: e.target.value}))} placeholder="5432" className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500" />
+                      <label className="text-xs text-muted-foreground mb-1 block">Port</label>
+                      <input value={dbConfig.port} onChange={e => setDbConfig(p => ({...p, port: e.target.value}))} placeholder="5432" className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-zinc-500" />
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs text-zinc-500 mb-1 block">Database Name</label>
-                    <input value={dbConfig.name} onChange={e => setDbConfig(p => ({...p, name: e.target.value}))} placeholder="my_database" className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500" />
+                    <label className="text-xs text-muted-foreground mb-1 block">Database Name</label>
+                    <input value={dbConfig.name} onChange={e => setDbConfig(p => ({...p, name: e.target.value}))} placeholder="my_database" className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-zinc-500" />
                   </div>
                   <div>
-                    <label className="text-xs text-zinc-500 mb-1 block">Username</label>
-                    <input value={dbConfig.user} onChange={e => setDbConfig(p => ({...p, user: e.target.value}))} placeholder="postgres" className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500" />
+                    <label className="text-xs text-muted-foreground mb-1 block">Username</label>
+                    <input value={dbConfig.user} onChange={e => setDbConfig(p => ({...p, user: e.target.value}))} placeholder="postgres" className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-zinc-500" />
                   </div>
                   <div>
-                    <label className="text-xs text-zinc-500 mb-1 block">Password</label>
-                    <input type="password" value={dbConfig.password} onChange={e => setDbConfig(p => ({...p, password: e.target.value}))} placeholder="••••••••" className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500" />
+                    <label className="text-xs text-muted-foreground mb-1 block">Password</label>
+                    <input type="password" value={dbConfig.password} onChange={e => setDbConfig(p => ({...p, password: e.target.value}))} placeholder="••••••••" className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-zinc-500" />
                   </div>
                 </div>
                 <div className="flex gap-3 justify-end mt-5">
-                  <button onClick={() => setShowDbModal(false)} className="px-4 py-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors">Cancel</button>
+                  <button onClick={() => setShowDbModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
                   <button
                     onClick={() => {
                       if (!dbConfig.host || !dbConfig.name) return;
@@ -1041,7 +1054,7 @@ export default function KnowledgeBase() {
                       setDbConfig({ host: "", port: "", name: "", user: "", password: "" });
                       setShowDbModal(false);
                     }}
-                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm rounded-lg font-medium transition-colors"
+                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-foreground text-sm rounded-lg font-medium transition-colors"
                   >
                     Connect
                   </button>
@@ -1052,36 +1065,36 @@ export default function KnowledgeBase() {
 
           {/* View File Modal */}
           {selectedFile && (
-            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="bg-[#0a0a0a] border border-zinc-800 rounded-2xl w-full max-w-[900px] shadow-2xl flex flex-col h-auto max-h-[90vh]">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 border-b border-zinc-800/60 bg-zinc-900/50 rounded-t-2xl gap-4">
+            <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="bg-background border border-border rounded-xl w-full max-w-4xl shadow-2xl flex flex-col h-[80vh] max-h-[90vh]">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 border-b border-border bg-background rounded-t-xl gap-4">
                   <div className="min-w-0">
-                    <h2 className="text-lg font-semibold text-zinc-100 flex items-center gap-3 truncate">
-                      <span className="text-amber-400 capitalize flex-shrink-0">
+                    <h2 className="text-xl font-semibold text-foreground flex items-center gap-3 truncate">
+                      <span className="text-muted-foreground">
                         {getFileType(selectedFile.filename) === 'json' ? <Icons.FileJson /> : <Icons.File />}
                       </span>
                       <span className="truncate">{selectedFile.name}</span>
                     </h2>
                     <div className="flex items-center flex-wrap gap-2 mt-2">
                       {selectedFile.category && (
-                        <span className={`text-xs px-2.5 py-1 rounded-full border font-medium ${severityColor(selectedFile.category)}`}>
+                        <span className="text-xs px-2.5 py-1 rounded-full bg-muted text-muted-foreground border border-border font-medium">
                           {selectedFile.category}
                         </span>
                       )}
                       {getFileType(selectedFile.filename) === 'json' && (
-                        <span className="text-xs text-zinc-400 font-medium bg-black/50 px-2.5 py-1 rounded-lg border border-zinc-800/60">
+                        <span className="text-xs px-2.5 py-1 rounded-full bg-muted text-muted-foreground border border-border font-medium">
                           {selectedFile.policies_count || 0} policies
                         </span>
                       )}
                       {selectedFile.size && (
-                        <span className="text-xs text-zinc-500 font-medium px-2 py-1">
+                        <span className="text-xs px-2.5 py-1 rounded-full bg-muted text-muted-foreground border border-border font-medium">
                           {selectedFile.size}
                         </span>
                       )}
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <button 
                       onClick={() => {
                         let text = "";
@@ -1090,7 +1103,7 @@ export default function KnowledgeBase() {
                         navigator.clipboard.writeText(text);
                         showToast("Copied to clipboard", "success");
                       }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors border border-zinc-800/0 hover:border-zinc-700"
+                      className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-foreground bg-card hover:bg-muted border border-border transition-colors rounded-lg shadow-sm"
                     >
                       <Icons.Copy /> <span className="hidden sm:inline">Copy</span>
                     </button>
@@ -1115,23 +1128,23 @@ export default function KnowledgeBase() {
                           a.click();
                         }
                       }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors border border-zinc-800/0 hover:border-zinc-700"
+                      className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-foreground bg-card hover:bg-muted border border-border transition-colors rounded-lg shadow-sm"
                     >
                       <Icons.Download /> <span className="hidden sm:inline">Download</span>
                     </button>
-                    <div className="w-px h-5 bg-zinc-800 mx-1 hidden sm:block"></div>
-                    <button onClick={() => { setSelectedFile(null); setFileContent(null); }} className="p-1.5 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 rounded-lg transition-colors ml-1">
+                    <div className="w-px h-6 bg-border mx-1 hidden sm:block"></div>
+                    <button onClick={() => { setSelectedFile(null); setFileContent(null); }} className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-full transition-colors ml-1">
                       <Icons.X />
                     </button>
                   </div>
                 </div>
                 
                 {getFileType(selectedFile.filename) === 'json' && (
-                  <div className="flex items-center bg-zinc-900/30 px-5 pt-3 border-b border-zinc-800/60 gap-4">
+                  <div className="flex items-center bg-card px-6 pt-3 border-b border-border gap-6">
                     <button 
                       onClick={() => setViewerTab("formatted")}
                       className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
-                        viewerTab === "formatted" ? "border-violet-500 text-zinc-100" : "border-transparent text-zinc-500 hover:text-zinc-300"
+                        viewerTab === "formatted" ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       Formatted
@@ -1139,7 +1152,7 @@ export default function KnowledgeBase() {
                     <button 
                       onClick={() => setViewerTab("raw")}
                       className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
-                        viewerTab === "raw" ? "border-violet-500 text-zinc-100" : "border-transparent text-zinc-500 hover:text-zinc-300"
+                        viewerTab === "raw" ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       Raw JSON
@@ -1147,20 +1160,20 @@ export default function KnowledgeBase() {
                   </div>
                 )}
                 
-                <div className="p-6 overflow-y-auto overflow-x-auto flex-1 font-mono text-sm bg-black/60 h-[60vh] max-h-[60vh]">
+                <div className="p-6 overflow-hidden flex-1 bg-background flex flex-col min-h-0">
                   {loadingContent ? (
-                    <div className="flex flex-col items-center justify-center py-20 gap-4 h-full">
-                      <span className="animate-spin inline-block text-zinc-500"><Icons.Refresh /></span>
-                      <p className="text-zinc-500 font-sans">Fetching document contents...</p>
+                    <div className="flex flex-col items-center justify-center h-full gap-4">
+                      <span className="animate-spin inline-block text-muted-foreground"><Icons.Refresh /></span>
+                      <p className="text-muted-foreground text-sm">Fetching document contents...</p>
                     </div>
                   ) : fileContent || ['pdf', 'image'].includes(getFileType(selectedFile.filename)) ? (
-                    <div className="h-full">
+                    <div className="h-full w-full overflow-hidden flex flex-col">
                       {renderFileContent(fileContent)}
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center justify-center py-20 h-full gap-3 border border-dashed border-zinc-800/60 rounded-xl bg-zinc-900/20">
-                      <span className="text-zinc-700 capitalize"><Icons.File /></span>
-                      <p className="text-zinc-500 font-sans">No content available to display.</p>
+                    <div className="flex flex-col items-center justify-center h-full gap-3 border border-dashed border-border rounded-xl bg-muted/30">
+                      <span className="text-muted-foreground"><Icons.File /></span>
+                      <p className="text-muted-foreground text-sm">No content available to display.</p>
                     </div>
                   )}
                 </div>
@@ -1170,18 +1183,18 @@ export default function KnowledgeBase() {
 
           {/* Delete Confirmation Modal */}
           {docToDelete && (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
-                <h2 className="text-lg font-semibold text-zinc-100 mb-2">Delete File?</h2>
-                <p className="text-sm text-zinc-400 mb-6 leading-relaxed">Are you sure you want to delete <span className="text-zinc-200 font-medium">{docToDelete.name}</span>? This action cannot be undone.</p>
+            <div className="fixed inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="bg-background border border-border rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+                <h2 className="text-lg font-semibold text-foreground mb-2">Delete File?</h2>
+                <p className="text-sm text-muted-foreground mb-6 leading-relaxed">Are you sure you want to delete <span className="text-foreground font-medium">{docToDelete.name}</span>? This action cannot be undone.</p>
                 <div className="flex gap-3 justify-end">
-                  <button onClick={() => setDocToDelete(null)} className="px-4 py-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors">Cancel</button>
+                  <button onClick={() => setDocToDelete(null)} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
                   <button 
                     onClick={() => {
                       removeDoc(docToDelete);
                       setDocToDelete(null);
                     }} 
-                    className="px-5 py-2 bg-red-600 hover:bg-red-500 text-white text-sm rounded-lg font-medium transition-colors"
+                    className="px-5 py-2 bg-red-600 hover:bg-red-500 text-foreground text-sm rounded-lg font-medium transition-colors"
                   >
                     Delete
                   </button>
@@ -1192,35 +1205,35 @@ export default function KnowledgeBase() {
 
           {/* Edit File Modal */}
           {editingFile && (
-            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="bg-[#0a0a0a] border border-zinc-800 rounded-2xl w-full max-w-[800px] shadow-2xl flex flex-col h-auto max-h-[90vh]">
+            <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="bg-background border border-border rounded-2xl w-full max-w-[800px] shadow-2xl flex flex-col h-auto max-h-[90vh]">
                 
                 {/* Header */}
-                <div className="flex items-center justify-between p-5 border-b border-zinc-800/60 bg-zinc-900/50 rounded-t-2xl">
-                  <h2 className="text-lg font-semibold text-zinc-100 flex items-center gap-3">
+                <div className="flex items-center justify-between p-5 border-b border-border/60 bg-background rounded-t-2xl">
+                  <h2 className="text-lg font-semibold text-foreground flex items-center gap-3">
                     <span className="text-amber-400"><Icons.Edit /></span>
-                    Edit File <span className="text-zinc-500 text-sm font-normal">({editingFile.name})</span>
+                    Edit File <span className="text-muted-foreground text-sm font-normal">({editingFile.name})</span>
                   </h2>
                   <div className="flex items-center gap-2">
                     {editMode === "rules" ? (
-                      <button onClick={() => setEditMode("raw")} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 border border-zinc-700/50 hover:border-zinc-500 rounded-lg transition-colors">
+                      <button onClick={() => setEditMode("raw")} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground border border-border/50 hover:border-zinc-500 rounded-lg transition-colors">
                         <Icons.Code /> Edit Raw JSON
                       </button>
                     ) : (
-                      <button onClick={() => setEditMode("rules")} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 border border-zinc-700/50 hover:border-zinc-500 rounded-lg transition-colors">
+                      <button onClick={() => setEditMode("rules")} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground border border-border/50 hover:border-zinc-500 rounded-lg transition-colors">
                         <Icons.Edit /> Edit Rules
                       </button>
                     )}
-                    <button onClick={() => setEditingFile(null)} className="p-1.5 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 rounded-lg transition-colors ml-1">
+                    <button onClick={() => setEditingFile(null)} className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-full transition-colors ml-1">
                       <Icons.X />
                     </button>
                   </div>
                 </div>
                 
                 {editMode === "raw" ? (
-                  <div className="p-6 overflow-y-auto flex-1 font-sans text-sm bg-black/60 flex flex-col h-[60vh] max-h-[70vh]">
+                  <div className="p-6 overflow-y-auto flex-1 font-sans text-sm bg-background/60 flex flex-col h-[60vh] max-h-[70vh]">
                     <div className="flex items-center justify-between mb-3">
-                      <label className="text-xs font-semibold text-zinc-400">Raw JSON Content</label>
+                      <label className="text-xs font-semibold text-muted-foreground">Raw JSON Content</label>
                     </div>
                     {rawJsonError && (
                       <div className="text-red-400 text-xs mb-3 font-medium bg-red-500/10 p-3 rounded-lg border border-red-500/20">{rawJsonError}</div>
@@ -1231,31 +1244,31 @@ export default function KnowledgeBase() {
                         setRawJsonText(e.target.value);
                         setRawJsonError("");
                       }}
-                      className="w-full flex-1 bg-[#0a0a0a] border border-zinc-800 rounded-xl p-4 text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all font-mono resize-none leading-relaxed"
+                      className="w-full flex-1 bg-background border border-border rounded-xl p-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all font-mono resize-none leading-relaxed"
                       spellCheck={false}
                     />
                   </div>
                 ) : (
-                  <div className="p-6 overflow-y-auto flex-1 font-sans text-sm bg-black/60 space-y-6 max-h-[70vh]">
+                  <div className="p-6 overflow-y-auto flex-1 font-sans text-sm bg-background/60 space-y-6 max-h-[70vh]">
                     {/* File Name & Category */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-xs font-semibold text-zinc-400">File Name</label>
+                        <label className="text-xs font-semibold text-muted-foreground">File Name</label>
                         <input 
                           value={editForm.name}
                           onChange={e => setEditForm(p => ({...p, name: e.target.value}))}
-                          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all font-mono"
+                          className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all font-mono"
                           placeholder="e.g. bbmp_roads_sanitation.json"
                         />
                       </div>
                       
                       <div className="space-y-1.5">
-                        <label className="text-xs font-semibold text-zinc-400">Category</label>
+                        <label className="text-xs font-semibold text-muted-foreground">Category</label>
                         <div className="relative">
                           <select 
                             value={editForm.category}
                             onChange={e => setEditForm(p => ({...p, category: e.target.value}))}
-                            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-4 pr-10 py-2.5 text-sm text-zinc-200 appearance-none focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all"
+                            className="w-full bg-background border border-border rounded-xl pl-4 pr-10 py-2.5 text-sm text-foreground appearance-none focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all"
                           >
                             <option value="">Select Category...</option>
                             <option value="Roads and Sanitation">Roads and Sanitation</option>
@@ -1264,37 +1277,37 @@ export default function KnowledgeBase() {
                             <option value="Network">Network</option>
                             <option value="Other">Other</option>
                           </select>
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
                              <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><polyline points="6 9 12 15 18 9"/></svg>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <hr className="border-zinc-800/80" />
+                    <hr className="border-border/80" />
 
                     {/* Rules Settings */}
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
+                        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                           Policies / Rules
-                          <span className="bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full text-xs">{editForm.rules.length}</span>
+                          <span className="bg-card text-muted-foreground px-2 py-0.5 rounded-full text-xs">{editForm.rules.length}</span>
                         </h3>
                       </div>
                       
                       <div className="space-y-3">
                         {editForm.rules.length === 0 ? (
-                          <div className="text-center py-8 bg-zinc-900/30 rounded-xl border border-dashed border-zinc-800">
-                            <p className="text-zinc-500 text-sm">No rules defined yet.</p>
+                          <div className="text-center py-8 bg-background/30 rounded-xl border border-dashed border-border">
+                            <p className="text-muted-foreground text-sm">No rules defined yet.</p>
                           </div>
                         ) : (
                           editForm.rules.map((rule, index) => (
-                            <div key={index} className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 transition-colors focus-within:border-zinc-700 focus-within:bg-zinc-900">
-                              <div className="flex items-center justify-between mb-3 border-b border-zinc-800/50 pb-2">
+                            <div key={index} className="bg-background border border-border rounded-xl p-4 transition-colors focus-within:border-border focus-within:bg-background">
+                              <div className="flex items-center justify-between mb-3 border-b border-border/50 pb-2">
                                 <span className="text-xs font-semibold text-violet-400 uppercase tracking-wider">Rule {index + 1}</span>
                                 <button 
                                   onClick={() => handleEditRuleDelete(index)} 
-                                  className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 p-1 rounded-md transition-colors"
+                                  className="text-muted-foreground hover:text-red-400 hover:bg-red-500/10 p-1 rounded-md transition-colors"
                                 >
                                   <Icons.Trash />
                                 </button>
@@ -1304,14 +1317,14 @@ export default function KnowledgeBase() {
                                   placeholder="Rule title (e.g., Water supply restored within 48 hours)"
                                   value={rule.title || rule.name || rule.rule || ''}
                                   onChange={e => handleRuleChange(index, rule.title !== undefined ? 'title' : (rule.name !== undefined ? 'name' : 'rule'), e.target.value)}
-                                  className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-violet-500 transition-colors"
+                                  className="w-full bg-background/50 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-violet-500 transition-colors"
                                 />
                                 <textarea
                                   placeholder="Rule description or extra details..."
                                   value={rule.description || rule.desc || ''}
                                   onChange={e => handleRuleChange(index, rule.description !== undefined ? 'description' : 'desc', e.target.value)}
                                   rows={2}
-                                  className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-violet-500 transition-colors resize-none"
+                                  className="w-full bg-background/50 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-violet-500 transition-colors resize-none"
                                 />
                               </div>
                             </div>
@@ -1321,7 +1334,7 @@ export default function KnowledgeBase() {
                       
                       <button 
                         onClick={handleAddRule} 
-                        className="w-full py-3 border border-dashed border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                        className="w-full py-3 border border-dashed border-border text-muted-foreground hover:text-foreground hover:bg-background rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
                       >
                         <span className="text-lg leading-none mt-[-2px]">+</span> Add New Rule
                       </button>
@@ -1330,7 +1343,7 @@ export default function KnowledgeBase() {
                 )}
 
                 {/* Footer */}
-                <div className="p-5 border-t border-zinc-800/60 bg-zinc-900/50 rounded-b-2xl flex items-center justify-between">
+                <div className="p-5 border-t border-border/60 bg-background rounded-b-2xl flex items-center justify-between">
                   <button 
                     onClick={() => {
                       let dataStr = "";
@@ -1344,18 +1357,18 @@ export default function KnowledgeBase() {
                       a.click();
                       URL.revokeObjectURL(url);
                     }}
-                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-200 transition-colors bg-zinc-800/50 hover:bg-zinc-800 rounded-lg border border-zinc-700/50 shadow-sm"
+                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors bg-card/50 hover:bg-card rounded-lg border border-border/50 shadow-sm"
                   >
                     <Icons.Download /> Download JSON
                   </button>
                   <div className="flex items-center gap-3">
-                    <button onClick={() => setEditingFile(null)} className="px-5 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-200 transition-colors">
+                    <button onClick={() => setEditingFile(null)} className="px-5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                       Cancel
                     </button>
                     <button 
                       onClick={handleSaveEdit} 
                       disabled={savingEdit}
-                      className="px-6 py-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm rounded-xl font-medium transition-all shadow-lg shadow-violet-500/20 flex items-center gap-2"
+                      className="px-6 py-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-foreground text-sm rounded-xl font-medium transition-all shadow-lg shadow-violet-500/20 flex items-center gap-2"
                     >
                       {savingEdit ? <span className="animate-spin inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full"></span> : <Icons.Check />}
                       Save Changes
@@ -1368,15 +1381,15 @@ export default function KnowledgeBase() {
           )}
           {/* Add Files Modal */}
           {showAddFilesModal && (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 w-full max-w-lg shadow-2xl flex flex-col h-auto max-h-[90vh]">
-                <h2 className="text-base font-semibold text-zinc-100 mb-1">Add Files</h2>
-                <p className="text-xs text-zinc-500 mb-5">Upload multiple documents formats to process.</p>
+            <div className="fixed inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="bg-background border border-border rounded-2xl p-6 w-full max-w-lg shadow-2xl flex flex-col h-auto max-h-[90vh]">
+                <h2 className="text-base font-semibold text-foreground mb-1">Add Files</h2>
+                <p className="text-xs text-muted-foreground mb-5">Upload multiple documents formats to process.</p>
                 
                 <div className="flex-1 overflow-y-auto space-y-5 pr-2">
                   <div
                     className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 cursor-pointer ${
-                      dragging ? 'border-[#60a5fa]/70 bg-[#60a5fa]/10' : 'border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800/30'
+                      dragging ? 'border-[#60a5fa]/70 bg-[#60a5fa]/10' : 'border-border hover:border-zinc-500 hover:bg-card/30'
                     }`}
                     onDragOver={e => { e.preventDefault(); setDragging(true); }}
                     onDragLeave={() => setDragging(false)}
@@ -1397,18 +1410,18 @@ export default function KnowledgeBase() {
                     }}
                   >
                     <span className="text-[#60a5fa] flex justify-center mb-3"><Icons.FolderOpen /></span>
-                    <p className="text-sm text-zinc-300 font-medium mb-1">Drag & drop files here or click to browse</p>
-                    <p className="text-xs text-zinc-600">Accepts .pdf, .txt, .csv, .docx, .json</p>
+                    <p className="text-sm text-foreground font-medium mb-1">Drag & drop files here or click to browse</p>
+                    <p className="text-xs text-muted-foreground">Accepts .pdf, .txt, .csv, .docx, .json</p>
                   </div>
 
                   {addFilesList.length > 0 && (
                     <div className="space-y-2">
-                      <label className="text-xs font-semibold text-zinc-400 block mb-1">Selected Files ({addFilesList.length})</label>
+                      <label className="text-xs font-semibold text-muted-foreground block mb-1">Selected Files ({addFilesList.length})</label>
                       <div className="flex flex-col gap-2 max-h-32 overflow-y-auto pr-1">
                         {addFilesList.map((f, i) => (
-                           <div key={i} className="flex justify-between items-center text-xs text-zinc-300 bg-zinc-800/50 p-2 rounded-lg border border-zinc-700/50">
-                             <div className="truncate flex-1 pr-3 font-mono">{f.name} <span className="text-zinc-500 text-[10px] ml-1">({(f.size / 1024).toFixed(1)} KB)</span></div>
-                             <button onClick={() => setAddFilesList(prev => prev.filter((_, idx) => idx !== i))} className="text-zinc-500 hover:text-red-400 p-1 rounded-md transition-colors"><Icons.X /></button>
+                           <div key={i} className="flex justify-between items-center text-xs text-foreground bg-card/50 p-2 rounded-lg border border-border/50">
+                             <div className="truncate flex-1 pr-3 font-mono">{f.name} <span className="text-muted-foreground text-[10px] ml-1">({(f.size / 1024).toFixed(1)} KB)</span></div>
+                             <button onClick={() => setAddFilesList(prev => prev.filter((_, idx) => idx !== i))} className="text-muted-foreground hover:text-red-400 p-1 rounded-md transition-colors"><Icons.X /></button>
                            </div>
                         ))}
                       </div>
@@ -1416,12 +1429,12 @@ export default function KnowledgeBase() {
                   )}
 
                   <div className="space-y-1.5 pt-2">
-                    <label className="text-xs font-semibold text-zinc-400">Default Category (Optional)</label>
+                    <label className="text-xs font-semibold text-muted-foreground">Default Category (Optional)</label>
                     <div className="relative">
                       <select 
                         value={addFilesCategory}
                         onChange={e => setAddFilesCategory(e.target.value)}
-                        className="w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-3 pr-10 py-2.5 text-sm text-zinc-300 appearance-none focus:outline-none focus:border-violet-500"
+                        className="w-full bg-card border border-border rounded-lg pl-3 pr-10 py-2.5 text-sm text-foreground appearance-none focus:outline-none focus:border-violet-500"
                       >
                         <option value="">Select Category...</option>
                         <option value="Roads and Sanitation">Roads and Sanitation</option>
@@ -1430,16 +1443,16 @@ export default function KnowledgeBase() {
                         <option value="Network">Network</option>
                         <option value="Other">Other</option>
                       </select>
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
                          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><polyline points="6 9 12 15 18 9"/></svg>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex gap-3 justify-end mt-6 pt-4 border-t border-zinc-800/60">
-                   <button onClick={() => setShowAddFilesModal(false)} className="px-4 py-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors">Cancel</button>
-                   <button onClick={handleAddFilesSubmit} disabled={uploadingFiles || addFilesList.length === 0} className="w-full sm:w-auto px-6 py-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-sm rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
+                <div className="flex gap-3 justify-end mt-6 pt-4 border-t border-border/60">
+                   <button onClick={() => setShowAddFilesModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
+                   <button onClick={handleAddFilesSubmit} disabled={uploadingFiles || addFilesList.length === 0} className="w-full sm:w-auto px-6 py-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-foreground text-sm rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
                       {uploadingFiles ? <span className="animate-spin inline-block"><Icons.Refresh /></span> : <Icons.Upload />}
                       Upload Files
                    </button>
@@ -1450,29 +1463,29 @@ export default function KnowledgeBase() {
 
           {/* Add Text Modal */}
           {showAddTextModal && (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 w-full max-w-2xl shadow-2xl flex flex-col h-auto max-h-[90vh]">
-                <h2 className="text-base font-semibold text-zinc-100 mb-1">Add Text</h2>
-                <p className="text-xs text-zinc-500 mb-5">Create a dedicated knowledge document directly from unstructured text.</p>
+            <div className="fixed inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="bg-background border border-border rounded-2xl p-6 w-full max-w-2xl shadow-2xl flex flex-col h-auto max-h-[90vh]">
+                <h2 className="text-base font-semibold text-foreground mb-1">Add Text</h2>
+                <p className="text-xs text-muted-foreground mb-5">Create a dedicated knowledge document directly from unstructured text.</p>
                 
                 <div className="flex-1 overflow-y-auto space-y-4 pr-2">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-zinc-400">Document Name</label>
+                      <label className="text-xs font-semibold text-muted-foreground">Document Name</label>
                       <input 
                         value={addTextForm.name}
                         onChange={e => setAddTextForm(p => ({...p, name: e.target.value}))}
                         placeholder="e.g. water_supply_rules"
-                        className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-zinc-300 focus:outline-none focus:border-violet-500 transition-all font-mono"
+                        className="w-full bg-card border border-border rounded-lg px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-violet-500 transition-all font-mono"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-zinc-400">Category</label>
+                      <label className="text-xs font-semibold text-muted-foreground">Category</label>
                       <div className="relative">
                         <select 
                           value={addTextForm.category}
                           onChange={e => setAddTextForm(p => ({...p, category: e.target.value}))}
-                          className="w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-3 pr-10 py-2.5 text-sm text-zinc-300 appearance-none focus:outline-none focus:border-violet-500 transition-all"
+                          className="w-full bg-card border border-border rounded-lg pl-3 pr-10 py-2.5 text-sm text-foreground appearance-none focus:outline-none focus:border-violet-500 transition-all"
                         >
                           <option value="">Select Category...</option>
                           <option value="Roads and Sanitation">Roads and Sanitation</option>
@@ -1481,7 +1494,7 @@ export default function KnowledgeBase() {
                           <option value="Network">Network</option>
                           <option value="Other">Other</option>
                         </select>
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
                            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><polyline points="6 9 12 15 18 9"/></svg>
                         </div>
                       </div>
@@ -1489,20 +1502,20 @@ export default function KnowledgeBase() {
                   </div>
 
                   <div className="space-y-1.5 h-full flex flex-col pt-2">
-                    <label className="text-xs font-semibold text-zinc-400">Content</label>
+                    <label className="text-xs font-semibold text-muted-foreground">Content</label>
                     <textarea 
                       value={addTextForm.content}
                       onChange={e => setAddTextForm(p => ({...p, content: e.target.value}))}
                       placeholder="Paste or type your text content here..."
-                      className="w-full min-h-[200px] flex-1 bg-zinc-950/50 border border-zinc-800 rounded-lg p-4 text-sm text-zinc-300 font-mono resize-y focus:outline-none focus:border-violet-500 leading-relaxed shadow-inner"
+                      className="w-full min-h-[200px] flex-1 bg-background/50 border border-border rounded-lg p-4 text-sm text-foreground font-mono resize-y focus:outline-none focus:border-violet-500 leading-relaxed shadow-inner"
                     />
-                    <p className="text-[10px] text-zinc-500 mt-1 pl-1 font-medium">Supports plain text. Each paragraph or line break may be treated as a separate entry.</p>
+                    <p className="text-[10px] text-muted-foreground mt-1 pl-1 font-medium">Supports plain text. Each paragraph or line break may be treated as a separate entry.</p>
                   </div>
                 </div>
 
-                <div className="flex gap-3 justify-end mt-6 pt-4 border-t border-zinc-800/60">
-                   <button onClick={() => setShowAddTextModal(false)} className="px-4 py-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors">Cancel</button>
-                   <button onClick={handleAddTextSubmit} disabled={savingText} className="w-full sm:w-auto px-6 py-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-sm rounded-xl font-medium transition-colors flex items-center justify-center gap-2 shadow-lg shadow-violet-500/20">
+                <div className="flex gap-3 justify-end mt-6 pt-4 border-t border-border/60">
+                   <button onClick={() => setShowAddTextModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
+                   <button onClick={handleAddTextSubmit} disabled={savingText} className="w-full sm:w-auto px-6 py-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-foreground text-sm rounded-xl font-medium transition-colors flex items-center justify-center gap-2 shadow-lg shadow-violet-500/20">
                       {savingText ? <span className="animate-spin inline-block"><Icons.Refresh /></span> : <Icons.Check />}
                       Save Text
                    </button>
