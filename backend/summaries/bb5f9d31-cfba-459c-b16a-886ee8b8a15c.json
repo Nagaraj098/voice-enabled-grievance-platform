@@ -1,0 +1,31 @@
+{
+  "issue_category": "Other",
+  "severity": "high",
+  "description": "Police is refusing to take my FIR",
+  "resolution_status": "Registered",
+  "user_name": "David.",
+  "session_id": "bb5f9d31-cfba-459c-b16a-886ee8b8a15c",
+  "messages": [
+    {
+      "role": "agent",
+      "text": "Hello! Welcome to the Grievance Registration System. I'm here to help you register your complaint today. May I know your full name please?"
+    },
+    {
+      "role": "user",
+      "text": "My name is David."
+    },
+    {
+      "role": "agent",
+      "text": "Nice to meet you, David! Thank you for reaching out to us with your issue. Could you tell me which category your issue falls under?\n\nIs it Water Supply, Electricity, Road, Sanitation, Network, or something else?"
+    },
+    {
+      "role": "user",
+      "text": "Police is refusing to take my FIR."
+    },
+    {
+      "role": "agent",
+      "text": "David, I'm so sorry to hear that the police are refusing to register your FIR. Please know that by law, the police cannot refuse to register an FIR. If they're not taking your complaint seriously, I can help you with that.\n\nCan you please tell me more about what happened when you went to the police station? What was the reason they gave for not registering your FIR? And did they offer any alternative solution or procedure to address your concern?\n\nAlso, as a reminder, according to the law, the police must register an FIR within 24 hours of receiving a complaint. If they refuse, you can send a written complaint to the Superintendent of Police (SP) or Deputy Commissioner of Police (DCP). You can also file a"
+    }
+  ],
+  "duration": "1m 53s"
+}

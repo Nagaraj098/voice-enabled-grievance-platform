@@ -1,0 +1,161 @@
+{
+  "dataset_type": "department_knowledge",
+  "category": "Police and Safety",
+  "department": "Karnataka State Police - Bengaluru City Police",
+  "version": "1.0",
+  "description": "Complete knowledge base for Police department - used for RAG-based grievance resolution",
+  "policies": [
+    {
+      "rule": "FIR must be registered within 24 hours of complaint \u2014 no refusal allowed by law"
+    },
+    {
+      "rule": "Missing person complaint acted upon immediately within 1 hour"
+    },
+    {
+      "rule": "Women safety complaints given highest priority \u2014 response within 30 minutes"
+    },
+    {
+      "rule": "Cyber crime complaints acknowledged within 24 hours"
+    },
+    {
+      "rule": "Traffic accident complaints registered within 2 hours"
+    },
+    {
+      "rule": "Noise pollution complaints acted upon within 4 hours"
+    },
+    {
+      "rule": "Theft complaints registered within 24 hours and investigation started"
+    },
+    {
+      "rule": "Domestic violence complaints must be handled with immediate protection order if needed"
+    }
+  ],
+  "contact_info": {
+    "emergency": "100",
+    "women_helpline": "1091",
+    "cyber_crime": "1999",
+    "child_helpline": "1098",
+    "traffic_helpline": "103",
+    "bengaluru_control_room": "080-22942222",
+    "email": "complaints@ksp.gov.in",
+    "website": "https://ksp.gov.in",
+    "online_complaint": "https://ksp.gov.in/complaint",
+    "working_hours": "24x7 for emergency. Office hours 10AM-5PM for non-emergency."
+  },
+  "escalation_matrix": [
+    {
+      "level": 1,
+      "role": "Beat Constable / Local Police Station",
+      "response_time": "1-4 hours",
+      "contact": "Local police station",
+      "when_to_escalate": "No response in 24 hours"
+    },
+    {
+      "level": 2,
+      "role": "Sub Inspector (SI)",
+      "response_time": "24 hours",
+      "contact": "Police station SI",
+      "when_to_escalate": "No response in 48 hours"
+    },
+    {
+      "level": 3,
+      "role": "Inspector / Circle Inspector",
+      "response_time": "48 hours",
+      "contact": "Police circle office",
+      "when_to_escalate": "No response in 72 hours"
+    },
+    {
+      "level": 4,
+      "role": "Deputy Commissioner of Police (DCP)",
+      "response_time": "7 days",
+      "contact": "DCP office of the zone",
+      "when_to_escalate": "No response in 7 days"
+    }
+  ],
+  "common_grievances": [
+    {
+      "issue": "Theft or robbery",
+      "resolution": "Call 100 immediately or visit nearest police station. FIR must be registered within 24 hours. Get FIR copy for insurance claims. Case number provided via SMS.",
+      "resolution_time": "FIR within 24 hours",
+      "severity": "High"
+    },
+    {
+      "issue": "Missing person",
+      "resolution": "Call 100 immediately. Missing complaint registered within 1 hour. Photo and details shared with all stations. Check Trinetra app for updates.",
+      "resolution_time": "Immediate \u2014 1 hour",
+      "severity": "Critical"
+    },
+    {
+      "issue": "Harassment or threat",
+      "resolution": "Call 100 or visit police station. File complaint with written statement. Protection order can be issued if threat is credible. Women can call 1091.",
+      "resolution_time": "24 hours",
+      "severity": "High"
+    },
+    {
+      "issue": "Cyber crime or online fraud",
+      "resolution": "Call cyber crime helpline 1930 immediately. File complaint at cybercrime.gov.in. Do not share OTP or banking details. Block your card if compromised.",
+      "resolution_time": "24-48 hours",
+      "severity": "High"
+    },
+    {
+      "issue": "Domestic violence",
+      "resolution": "Call 100 or women helpline 1091. Immediate response guaranteed. Protection officer assigned. Shelter home provided if needed. Case registered under IPC 498A.",
+      "resolution_time": "Immediate",
+      "severity": "Critical"
+    },
+    {
+      "issue": "Noise pollution or public nuisance",
+      "resolution": "Call local police station or 100. Complaint acted upon within 4 hours. Fine imposed on defaulters. Repeat offenders booked under IPC.",
+      "resolution_time": "4 hours",
+      "severity": "Low"
+    },
+    {
+      "issue": "Traffic accident",
+      "resolution": "Call 100 or traffic helpline 103. Ambulance dispatched immediately. FIR registered within 2 hours. Medico-legal case (MLC) opened if injuries involved.",
+      "resolution_time": "Immediate \u2014 2 hours",
+      "severity": "Critical"
+    },
+    {
+      "issue": "Police not registering FIR",
+      "resolution": "Police cannot refuse to register FIR by law. Send written complaint to SP or DCP. File complaint on ksp.gov.in. You can also approach magistrate directly.",
+      "resolution_time": "24 hours",
+      "severity": "High"
+    }
+  ],
+  "services": [
+    "FIR registration",
+    "Missing person complaint",
+    "Cyber crime complaint",
+    "Character certificate",
+    "Tenant verification",
+    "Passport police verification",
+    "Traffic challan payment",
+    "Lost document certificate",
+    "Women safety escort service"
+  ],
+  "online_services": {
+    "complaint_portal": "https://ksp.gov.in/complaint",
+    "cyber_crime": "https://cybercrime.gov.in",
+    "fir_status": "https://ksp.gov.in/fir-status",
+    "challan_payment": "https://ksp.gov.in/traffic",
+    "tenant_verification": "https://ksp.gov.in/tenant"
+  },
+  "faq": [
+    {
+      "question": "Can police refuse to register my FIR?",
+      "answer": "No. By law police cannot refuse to register FIR. If refused, send written complaint to SP office or DCP. You can also file complaint on ksp.gov.in or approach magistrate directly."
+    },
+    {
+      "question": "How do I report cyber crime or online fraud?",
+      "answer": "Call cyber crime helpline 1930 immediately. Also file complaint at cybercrime.gov.in. Provide transaction details, screenshots and account numbers. Act fast to freeze funds."
+    },
+    {
+      "question": "Someone is missing. What to do immediately?",
+      "answer": "Call 100 immediately. Go to nearest police station with recent photo and ID. Missing complaint registered within 1 hour. Details shared with all stations across Karnataka."
+    },
+    {
+      "question": "How do I get a character certificate from police?",
+      "answer": "Apply online at ksp.gov.in or visit nearest police station with ID proof and address proof. Character certificate issued within 7-15 working days after verification."
+    }
+  ]
+}
