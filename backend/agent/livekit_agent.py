@@ -48,7 +48,6 @@
 #     "Network":      ["network", "internet", "wifi", "broadband", "signal", "mobile", "connectivity"],
 # }
 
-# # ✅ Auto greeting message
 # GREETING_MESSAGE = (
 #     "Hello! Welcome to the Grievance Registration System. "
 #     "I'm here to help you register your complaint today. "
@@ -180,8 +179,8 @@
 
 
 # async def send_greeting(session_id: str, stop_event: asyncio.Event):
-#     """✅ Auto-send greeting when call starts — AI speaks first."""
-#     await asyncio.sleep(1.5)  # wait for connection to stabilize
+#     """Auto-send greeting when call starts — AI speaks first."""
+#     await asyncio.sleep(1.5)
 
 #     if stop_event.is_set():
 #         return
@@ -194,10 +193,11 @@
 
 #     broadcast({"type": "ai_response", "text": GREETING_MESSAGE})
 
-#     async for audio_b64 in tts.synthesize_sentences(GREETING_MESSAGE):
-#         if stop_event.is_set():
-#             break
-#         broadcast({"type": "agent_audio", "audio": audio_b64})
+#     # ✅ Full greeting audio at once
+#     if not stop_event.is_set():
+#         audio_b64 = await tts.synthesize_async(GREETING_MESSAGE)
+#         if audio_b64:
+#             broadcast({"type": "agent_audio", "audio": audio_b64})
 
 #     print("✅ Greeting sent — waiting for user response")
 
@@ -266,19 +266,12 @@
 #                 session.add_message("assistant", ai_response)
 #                 broadcast({"type": "ai_response", "text": ai_response})
 
-#                 # 🔥 STEP 4: TTS sentence streaming
-#                 if stop_event.is_set():
-#                     break
-
-#                 sentence_count = 0
-#                 async for audio_b64 in tts.synthesize_sentences(ai_response):
-#                     if stop_event.is_set():
-#                         print("🛑 Cancelling TTS")
-#                         break
-#                     broadcast({"type": "agent_audio", "audio": audio_b64})
-#                     sentence_count += 1
-#                     print(f"✅ Sentence {sentence_count} audio sent")
-                
+#                 # 🔥 STEP 4: TTS — ✅ full response at once
+#                 if not stop_event.is_set():
+#                     audio_b64 = await tts.synthesize_async(ai_response)
+#                     if audio_b64:
+#                         broadcast({"type": "agent_audio", "audio": audio_b64})
+#                         print("✅ Audio sent")
 
 #         except Exception as e:
 #             print("❌ Audio Processing Error:", e)
@@ -317,8 +310,6 @@
 #             stop_events[participant.identity]         = stop_event
 #             print(f"📝 Session: {session.session_id}")
 #             broadcast({"type": "session_id", "session_id": session.session_id})
-
-#             # ✅ Send greeting first, then start listening
 #             asyncio.create_task(send_greeting(session.session_id, stop_event))
 #             asyncio.create_task(process_audio(track, session.session_id, stop_event))
 
@@ -406,13 +397,16 @@ CATEGORY_KEYWORDS = {
 
 GREETING_MESSAGE = (
     "Hello! Welcome to the Grievance Registration System. "
-    "I'm here to help you register your complaint today. "
+    "I am here to help you register your complaint today. "
     "May I know your full name please?"
 )
 
 buffer = AudioBuffer()
 stt    = STTService()
 tts    = TTSService()
+
+# Track active TTS tasks per session so we can cancel them instantly on disconnect
+active_tts_tasks: dict[str, asyncio.Task] = {}
 
 
 def broadcast(data: dict):
@@ -467,6 +461,54 @@ def extract_category(text: str) -> str:
     return "Other"
 
 
+async def safe_tts_and_broadcast(
+    text: str,
+    stop_event: asyncio.Event,
+    session_id: str,
+    label: str = ""
+):
+    """
+    Cancellable TTS helper.
+    - Stored as asyncio.Task so it can be cancelled instantly on disconnect
+    - Checks stop_event BEFORE and AFTER generation
+    - Never broadcasts audio if call has ended
+    """
+
+    # Check 1: before starting TTS
+    if stop_event.is_set():
+        print(f"🛑 [{label}] Skipping TTS — call already ended")
+        return
+
+    async def _run():
+        try:
+            audio_b64 = await tts.synthesize_async(text)
+
+            # Check 2: after TTS finishes (call may have ended during await)
+            if stop_event.is_set():
+                print(f"🛑 [{label}] Call ended during TTS — not broadcasting")
+                return
+
+            if audio_b64:
+                broadcast({"type": "agent_audio", "audio": audio_b64})
+                print(f"✅ Audio sent [{label}]")
+            else:
+                print(f"⚠️ TTS returned empty [{label}]")
+
+        except asyncio.CancelledError:
+            print(f"🛑 [{label}] TTS cancelled mid-generation")
+            raise
+
+    task = asyncio.create_task(_run())
+    active_tts_tasks[session_id] = task
+
+    try:
+        await task
+    except asyncio.CancelledError:
+        print(f"🛑 [{label}] TTS task was cancelled")
+    finally:
+        active_tts_tasks.pop(session_id, None)
+
+
 def generate_summary(session, duration_seconds: int) -> dict:
     try:
         history_text = "\n".join(
@@ -477,7 +519,7 @@ def generate_summary(session, duration_seconds: int) -> dict:
 - severity: "low" / "medium" / "high"
 - description: one clear sentence describing the issue
 - resolution_status: "Registered" / "In Progress" / "Resolved"
-- user_name: the user's name from conversation, else "Unknown"
+- user_name: the user name from conversation, else "Unknown"
 
 Conversation:
 {history_text}
@@ -535,13 +577,14 @@ def save_summary(session_id: str, summary: dict):
 
 
 async def send_greeting(session_id: str, stop_event: asyncio.Event):
-    """Auto-send greeting when call starts — AI speaks first."""
+    """Auto-send greeting when call starts."""
     await asyncio.sleep(1.5)
 
     if stop_event.is_set():
+        print("🛑 Greeting cancelled — call already ended")
         return
 
-    print(f"🤖 Sending greeting...")
+    print("🤖 Sending greeting...")
 
     session = store.get_session(session_id)
     if session:
@@ -549,13 +592,10 @@ async def send_greeting(session_id: str, stop_event: asyncio.Event):
 
     broadcast({"type": "ai_response", "text": GREETING_MESSAGE})
 
-    # ✅ Full greeting audio at once
-    if not stop_event.is_set():
-        audio_b64 = await tts.synthesize_async(GREETING_MESSAGE)
-        if audio_b64:
-            broadcast({"type": "agent_audio", "audio": audio_b64})
-
-    print("✅ Greeting sent — waiting for user response")
+    await safe_tts_and_broadcast(
+        GREETING_MESSAGE, stop_event, session_id, label="greeting"
+    )
+    print("✅ Greeting done")
 
 
 async def process_audio(track, session_id: str, stop_event: asyncio.Event):
@@ -563,6 +603,7 @@ async def process_audio(track, session_id: str, stop_event: asyncio.Event):
     audio_stream = rtc.AudioStream(track)
 
     async for frame in audio_stream:
+
         if stop_event.is_set():
             print("🛑 Stopping audio processing")
             break
@@ -573,15 +614,21 @@ async def process_audio(track, session_id: str, stop_event: asyncio.Event):
             buffer.add_frame(pcm_16k)
 
             if buffer.is_ready():
+
                 if stop_event.is_set():
+                    print("🛑 Stop before buffer processing")
                     break
 
                 audio_bytes = buffer.get_audio()
 
-                # 🔥 STEP 1: STT
+                # STEP 1: STT
                 text = stt.transcribe(audio_bytes, sample_rate=WHISPER_SAMPLE_RATE)
                 if not is_valid_transcript(text):
                     continue
+
+                if stop_event.is_set():
+                    print("🛑 Stop after STT")
+                    break
 
                 print(f"🗣 User: {text}")
 
@@ -589,14 +636,12 @@ async def process_audio(track, session_id: str, stop_event: asyncio.Event):
                 if not session:
                     continue
 
-                # ✅ Capture name during GREETING stage
                 if session.stage == Stage.GREETING and not session.user_name:
                     name = extract_name(text)
                     if name:
                         session.user_name = name
                         print(f"👤 Name captured: {name}")
 
-                # ✅ Capture category during COLLECT_NAME stage
                 if session.stage == Stage.COLLECT_NAME and not session.issue_category:
                     category = extract_category(text)
                     session.issue_category = category
@@ -608,26 +653,33 @@ async def process_audio(track, session_id: str, stop_event: asyncio.Event):
                 session.stage = get_next_stage(session.stage, text)
                 print(f"📍 Stage: {session.stage.value}")
 
+                if stop_event.is_set():
+                    print("🛑 Stop before LLM")
+                    break
+
                 broadcast({"type": "agent_thinking"})
 
-                # 🔥 STEP 3: LLM
+                # STEP 3: LLM
                 ai_response = generate_response(
                     user_message=text,
                     history=session.history[:-1],
                     stage=session.stage,
                     user_name=session.user_name,
                 )
-                print(f"🤖 AI: {ai_response}")
 
+                if stop_event.is_set():
+                    print("🛑 Stop after LLM — skipping TTS")
+                    break
+
+                print(f"🤖 AI: {ai_response}")
                 session.add_message("assistant", ai_response)
                 broadcast({"type": "ai_response", "text": ai_response})
 
-                # 🔥 STEP 4: TTS — ✅ full response at once
-                if not stop_event.is_set():
-                    audio_b64 = await tts.synthesize_async(ai_response)
-                    if audio_b64:
-                        broadcast({"type": "agent_audio", "audio": audio_b64})
-                        print("✅ Audio sent")
+                # STEP 4: TTS — cancellable
+                await safe_tts_and_broadcast(
+                    ai_response, stop_event, session_id,
+                    label=f"stage:{session.stage.value}"
+                )
 
         except Exception as e:
             print("❌ Audio Processing Error:", e)
@@ -672,15 +724,30 @@ async def main():
     @room.on("participant_disconnected")
     def on_disconnect(participant):
         print(f"👋 Participant disconnected: {participant.identity}")
+
+        # STEP 1: Set stop event immediately
         if participant.identity in stop_events:
             stop_events[participant.identity].set()
             del stop_events[participant.identity]
-            print(f"🛑 Stopped for: {participant.identity}")
+            print(f"🛑 Stop event set")
 
+        # STEP 2: Cancel any running TTS task immediately
+        all_sessions = store.get_all_sessions()
+        if all_sessions:
+            latest_session_id = all_sessions[-1]["session_id"]
+            task = active_tts_tasks.get(latest_session_id)
+            if task and not task.done():
+                task.cancel()
+                print(f"🛑 TTS task cancelled immediately")
+
+        # STEP 3: Tell frontend to stop playing audio
+        broadcast({"type": "stop_audio"})
+        print("📢 stop_audio sent to frontend")
+
+        # STEP 4: Generate summary
         start_time       = session_start_times.pop(participant.identity, None)
         duration_seconds = int(time.time() - start_time) if start_time else 0
 
-        all_sessions = store.get_all_sessions()
         if all_sessions:
             latest  = all_sessions[-1]
             session = store.get_session(latest["session_id"])
