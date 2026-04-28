@@ -2,8 +2,11 @@
 import { Bot, Database, Wrench, Puzzle, Mic2, MessageSquare, Users, Activity, Settings, LayoutDashboard } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useProfile } from "@/hooks/useProfile";
 
 export default function Sidebar({ activePage = "home" }: { activePage?: 'home' | 'call' | 'knowledge-base' | 'summary' | 'dashboard' | 'settings' }) {
+  const router = useRouter();
+  const { profile } = useProfile();
   return (
     <div className="w-60 bg-background border-r border-border p-4 flex flex-col h-full text-foreground">
       
@@ -50,11 +53,17 @@ export default function Sidebar({ activePage = "home" }: { activePage?: 'home' |
           accent="blue"
           href="/settings"
         />
-        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-card/40 transition-colors cursor-pointer">
-          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-[10px] font-bold text-foreground">U</div>
+        <div onClick={() => router.push('/profile')} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-card/40 transition-colors cursor-pointer">
+          <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-[10px] font-bold text-primary-foreground overflow-hidden">
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              profile?.name?.charAt(0) || "U"
+            )}
+          </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-foreground truncate">My Account</p>
-            <p className="text-[10px] text-muted-foreground truncate">user@email.com</p>
+            <p className="text-xs font-medium text-foreground truncate">{profile?.name || "My Account"}</p>
+            <p className="text-[10px] text-muted-foreground truncate">{profile?.email || "user@email.com"}</p>
           </div>
         </div>
       </div>

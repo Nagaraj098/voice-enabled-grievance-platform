@@ -24,6 +24,8 @@ const Icons = {
   FolderOpen: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>,
   CloudUpload: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>,
   LayoutGrid: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>,
+  Braces: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/></svg>,
+  Table: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>,
 };
 
 const API_BASE = "http://localhost:8000";
@@ -33,10 +35,12 @@ type Doc = {
   name: string;
   filename?: string;
   type: "url" | "file" | "json" | "db";
-  size?: string;
+  size?: string | number;
   category?: string;
   policies_count?: number;
   createdAt: string;
+  created_at?: string;
+  uploadedAt?: string;
   source: "local" | "backend";
   status?: "completed" | "processing" | "pending" | "uploading";
 };
@@ -119,10 +123,6 @@ export default function KnowledgeBase() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
-  const [showUrlModal, setShowUrlModal] = useState(false);
-  const [showDbModal, setShowDbModal] = useState(false);
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [showSampleModal, setShowSampleModal] = useState(false);
   const [dbConfig, setDbConfig] = useState({ host: "", port: "", name: "", user: "", password: "" });
   const [urlInput, setUrlInput] = useState("");
   const [dragging, setDragging] = useState(false);
@@ -143,19 +143,36 @@ export default function KnowledgeBase() {
   const [rawJsonError, setRawJsonError] = useState("");
 
   // Add Files State
-  const [showAddFilesModal, setShowAddFilesModal] = useState(false);
   const [addFilesList, setAddFilesList] = useState<File[]>([]);
   const [addFilesCategory, setAddFilesCategory] = useState("");
   const [uploadingFiles, setUploadingFiles] = useState(false);
 
   // Add Text State
-  const [showAddTextModal, setShowAddTextModal] = useState(false);
   const [addTextForm, setAddTextForm] = useState({ name: "", category: "", content: "" });
   const [savingText, setSavingText] = useState(false);
 
   // Tab State
-  const [activeTab, setActiveTab] = useState<'upload' | 'view'>('upload');
+  const [activeTab, setActiveTab] = useState<string>('add-url');
   const [copied, setCopied] = useState(false);
+
+  // File Browser State
+  const [showFileBrowser, setShowFileBrowser] = useState(false);
+  const [activeFileCategory, setActiveFileCategory] = useState("All");
+
+  // Edit Modal State
+  const [editContent, setEditContent] = useState<string>('');
+  const [editError, setEditError] = useState<string>('');
+
+  const formatSize = (size?: string | number) => {
+    if (size === undefined || size === null) return "—";
+    if (typeof size === 'string' && /[a-zA-Z]/.test(size)) return size;
+    const bytes = typeof size === 'string' ? parseInt(size, 10) : size;
+    if (isNaN(bytes) || bytes === 0) return "—";
+    const k = 1024;
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
 
   const getRawContent = (filename: string = '', rawData: any) => {
     if (typeof rawData === 'object') {
@@ -202,8 +219,10 @@ export default function KnowledgeBase() {
         name: f.filename,
         filename: f.filename,
         type: "json",
+        size: f.size,
         category: f.category,
         policies_count: f.policies_count,
+        created_at: f.created_at || f.uploadedAt,
         createdAt: new Date().toLocaleDateString(),
         source: "backend"
       }));
@@ -252,7 +271,6 @@ export default function KnowledgeBase() {
     if (successCount > 0) showToast(`${successCount} file(s) uploaded successfully`, "success");
     if (failCount > 0) showToast(`${failCount} file(s) failed — only JSON allowed`, "error");
     await fetchDocs();
-    setShowUploadModal(false);
   };
 
   const handleAddFilesSubmit = async () => {
@@ -279,7 +297,6 @@ export default function KnowledgeBase() {
     await fetchDocs();
     setAddFilesList([]);
     setAddFilesCategory("");
-    setShowAddFilesModal(false);
   };
 
   const handleAddTextSubmit = async () => {
@@ -299,7 +316,6 @@ export default function KnowledgeBase() {
       showToast("Text document saved", "success");
       await fetchDocs();
       setAddTextForm({ name: "", category: "", content: "" });
-      setShowAddTextModal(false);
     } catch (err) {
       // Fallback or simulate for UI state since backend endpoint might not exist yet
       const simulatedDoc: Doc = {
@@ -314,7 +330,6 @@ export default function KnowledgeBase() {
       setDocs(prev => [...prev, simulatedDoc]);
       showToast("Text saved locally (Backend endpoint pending)", "success");
       setAddTextForm({ name: "", category: "", content: "" });
-      setShowAddTextModal(false);
     } finally {
       setSavingText(false);
     }
@@ -329,7 +344,6 @@ export default function KnowledgeBase() {
       await uploadToBackend(file);
       showToast(`${sample.title} added to Knowledge Base`, "success");
       await fetchDocs();
-      setShowSampleModal(false);
     } catch (err: any) {
       showToast(err.message || "Upload failed", "error");
     } finally {
@@ -489,7 +503,6 @@ export default function KnowledgeBase() {
       source: "local"
     }]);
     setUrlInput("");
-    setShowUrlModal(false);
     showToast("URL added", "success");
   };
 
@@ -544,77 +557,318 @@ export default function KnowledgeBase() {
               <h1 className="text-2xl font-semibold text-foreground">Knowledge Base</h1>
               <p className="text-xs text-muted-foreground mt-0.5">Manage documents and data sources for the AI agent</p>
             </div>
-            {activeTab === 'view' && (
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={fetchDocs}
-                  disabled={loading}
-                  className="p-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-border transition-all"
-                >
-                  <span className={loading ? "animate-spin inline-block" : ""}><Icons.Refresh /></span>
-                </button>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]" />
-                  {docs.length} documents
-                </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={fetchDocs}
+                disabled={loading}
+                className="p-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-border transition-all"
+              >
+                <span className={loading ? "animate-spin inline-block" : ""}><Icons.Refresh /></span>
+              </button>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]" />
+                {docs.length} documents
               </div>
-            )}
+              <button
+                onClick={() => setShowFileBrowser(true)}
+                className="bg-card border border-border text-foreground hover:bg-muted px-4 py-1.5 rounded-lg text-sm flex items-center gap-2 ml-2 transition-colors"
+              >
+                <Icons.FolderOpen />
+                View Files
+              </button>
+            </div>
           </div>
 
-          {/* Tab Bar */}
-          <div className="flex items-center gap-6 border-b border-border/80 mb-6">
-            <button
-              onClick={() => setActiveTab('upload')}
-              className={`flex items-center gap-2 pb-3 px-1 text-sm font-medium transition-colors relative ${
-                activeTab === 'upload' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <Icons.CloudUpload />
-              Upload File
-              {activeTab === 'upload' && (
-                <div className="absolute bottom-0 left-0 w-full h-[2px] bg-violet-600 rounded-t-full shadow-[0_-2px_8px_rgba(124,58,237,0.5)]" />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('view')}
-              className={`flex items-center gap-2 pb-3 px-1 text-sm font-medium transition-colors relative ${
-                activeTab === 'view' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <Icons.LayoutGrid />
-              View
-              {activeTab === 'view' && (
-                <div className="absolute bottom-0 left-0 w-full h-[2px] bg-violet-600 rounded-t-full shadow-[0_-2px_8px_rgba(124,58,237,0.5)]" />
-              )}
-            </button>
+          {/* New Tab Bar */}
+          <div className="flex border-b border-border w-full mt-4">
+            {[
+              { id: 'add-url', label: 'Add URL', icon: <span className="text-blue-400"><Icons.Globe /></span> },
+              { id: 'upload-json', label: 'Upload JSON', icon: <span className="text-violet-400"><Icons.Upload /></span> },
+              { id: 'sample-jsons', label: 'Sample JSONs', icon: <span className="text-amber-400"><Icons.FileJson /></span> },
+              { id: 'connect-db', label: 'Connect to DB', icon: <span className="text-emerald-400"><Icons.Database /></span> },
+              { id: 'add-files', label: 'Add Files', icon: <span className="text-[#60a5fa]"><Icons.FolderOpen /></span> },
+              { id: 'add-text', label: 'Add Text', icon: <span className="text-[#34d399]"><Icons.FileText /></span> },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-4 py-2.5 text-sm font-medium flex items-center gap-2 cursor-pointer transition-colors ${
+                  activeTab === tab.id 
+                    ? 'text-foreground border-b-2 border-primary -mb-px' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
           </div>
 
-          {activeTab === 'upload' && (
-            <div className="flex-1 overflow-y-auto">
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-8">
-                {[
-                  { icon: <span className="text-blue-400"><Icons.Globe /></span>, label: "Add URL", bg: "bg-card border-border hover:bg-card/80", onClick: () => setShowUrlModal(true) },
-                  { icon: <span className="text-violet-400"><Icons.Upload /></span>, label: "Upload JSON", bg: "bg-card border-border hover:bg-card/80", onClick: () => setShowUploadModal(true) },
-                  { icon: <span className="text-amber-400"><Icons.FileJson /></span>, label: "Sample JSONs", bg: "bg-card border-border hover:bg-card/80", onClick: () => setShowSampleModal(true) },
-                  { icon: <span className="text-emerald-400"><Icons.Database /></span>, label: "Connect to DB", bg: "bg-card border-border hover:bg-card/80", onClick: () => setShowDbModal(true) },
-                  { icon: <span className="text-[#60a5fa]"><Icons.FolderOpen /></span>, label: "Add Files", bg: "bg-card border-border hover:bg-card/80", onClick: () => setShowAddFilesModal(true) },
-                  { icon: <span className="text-[#34d399]"><Icons.FileText /></span>, label: "Add Text", bg: "bg-card border-border hover:bg-card/80", onClick: () => setShowAddTextModal(true) },
-                ].map((item, i) => (
-                  <button
-                    key={i}
-                    onClick={item.onClick}
-                    className={`flex flex-col items-center justify-center gap-3 p-5 rounded-xl border transition-all duration-200 hover:scale-[1.02] active:scale-95 ${item.bg}`}
-                  >
-                    {item.icon}
-                    <span className="text-sm font-medium text-foreground">{item.label}</span>
-                  </button>
+          {/* Content Area */}
+          {activeTab === 'add-url' && (
+            <div className="bg-card border border-border rounded-xl p-6 mt-4">
+              <h2 className="text-base font-semibold text-foreground mb-4">Add URL</h2>
+              <input
+                value={urlInput}
+                onChange={e => setUrlInput(e.target.value)}
+                placeholder="https://example.com"
+                className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-zinc-500 mb-4"
+              />
+              <div className="flex gap-3 justify-end">
+                <button onClick={handleAddUrl} className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-foreground text-sm rounded-lg font-medium transition-colors">Add</button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'upload-json' && (
+            <div className="bg-card border border-border rounded-xl p-6 mt-4">
+              <h2 className="text-base font-semibold text-foreground mb-1">Upload JSON File</h2>
+              <p className="text-xs text-muted-foreground mb-5">Upload grievance JSON files to the knowledge base</p>
+              <div
+                className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 cursor-pointer ${
+                  dragging ? 'border-violet-500/70 bg-violet-500/10' : 'border-border hover:border-zinc-500 hover:bg-background/50'
+                }`}
+                onDragOver={e => { e.preventDefault(); setDragging(true); }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={e => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files); }}
+                onClick={() => fileRef.current?.click()}
+              >
+                <span className="text-muted-foreground flex justify-center mb-3"><Icons.Upload /></span>
+                <p className="text-sm text-foreground font-medium mb-1">Click to browse or drag JSON files here</p>
+                <p className="text-xs text-muted-foreground">Only .json files are supported</p>
+              </div>
+              {uploading && (
+                <div className="flex items-center gap-2 mt-4 text-xs text-muted-foreground">
+                  <span className="animate-spin inline-block"><Icons.Refresh /></span>
+                  Uploading to backend...
+                </div>
+              )}
+              <div className="flex gap-3 justify-end mt-5">
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  className="px-5 py-2 bg-violet-600 hover:bg-violet-500 text-foreground text-sm rounded-lg font-medium transition-colors flex items-center gap-2"
+                >
+                  <Icons.Upload />
+                  Browse Files
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'sample-jsons' && (
+            <div className="bg-card border border-border rounded-xl p-6 mt-4 max-h-[60vh] overflow-y-auto">
+              <h2 className="text-base font-semibold text-foreground mb-1">Sample Grievance JSONs</h2>
+              <p className="text-xs text-muted-foreground mb-5">Pre-built templates — click Upload to add directly to your backend knowledge base</p>
+              <div className="space-y-4">
+                {SAMPLE_JSONS.map((sample, i) => (
+                  <div key={i} className="bg-background border border-border rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-amber-400"><Icons.FileJson /></span>
+                        <span className="text-sm font-medium text-foreground">{sample.title}</span>
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${sample.color}`}>
+                          {sample.tag}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => uploadSampleJson(sample)}
+                        disabled={uploading}
+                        className="text-xs px-3 py-1.5 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-foreground rounded-lg font-medium transition-colors flex items-center gap-1.5"
+                      >
+                        {uploading ? <span className="animate-spin inline-block"><Icons.Refresh /></span> : <Icons.Upload />}
+                        Upload to KB
+                      </button>
+                    </div>
+                    <pre className="text-xs text-muted-foreground bg-background/50 rounded-lg p-3 overflow-x-auto max-h-36 overflow-y-auto border border-border">
+                      {JSON.stringify(sample.json, null, 2)}
+                    </pre>
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
-          {activeTab === 'view' && (
-            <div className="flex-1 flex flex-col min-h-0">
+          {activeTab === 'connect-db' && (
+            <div className="bg-card border border-border rounded-xl p-6 mt-4">
+              <h2 className="text-base font-semibold text-foreground mb-1">Connect to Database</h2>
+              <p className="text-xs text-muted-foreground mb-5">Enter your database connection details</p>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Host</label>
+                    <input value={dbConfig.host} onChange={e => setDbConfig(p => ({...p, host: e.target.value}))} placeholder="localhost" className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-zinc-500" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Port</label>
+                    <input value={dbConfig.port} onChange={e => setDbConfig(p => ({...p, port: e.target.value}))} placeholder="5432" className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-zinc-500" />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Database Name</label>
+                  <input value={dbConfig.name} onChange={e => setDbConfig(p => ({...p, name: e.target.value}))} placeholder="my_database" className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-zinc-500" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Username</label>
+                  <input value={dbConfig.user} onChange={e => setDbConfig(p => ({...p, user: e.target.value}))} placeholder="postgres" className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-zinc-500" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Password</label>
+                  <input type="password" value={dbConfig.password} onChange={e => setDbConfig(p => ({...p, password: e.target.value}))} placeholder="••••••••" className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-zinc-500" />
+                </div>
+              </div>
+              <div className="flex gap-3 justify-end mt-5">
+                <button
+                  onClick={() => {
+                    if (!dbConfig.host || !dbConfig.name) return;
+                    showToast(`Connected to ${dbConfig.name}`, "success");
+                    setDbConfig({ host: "", port: "", name: "", user: "", password: "" });
+                  }}
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-foreground text-sm rounded-lg font-medium transition-colors"
+                >
+                  Connect
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'add-files' && (
+            <div className="bg-card border border-border rounded-xl p-6 mt-4">
+              <h2 className="text-base font-semibold text-foreground mb-1">Add Files</h2>
+              <p className="text-xs text-muted-foreground mb-5">Upload multiple documents formats to process.</p>
+              
+              <div className="flex-1 space-y-5 pr-2">
+                <div
+                  className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 cursor-pointer ${
+                    dragging ? 'border-[#60a5fa]/70 bg-[#60a5fa]/10' : 'border-border hover:border-zinc-500 hover:bg-background/50'
+                  }`}
+                  onDragOver={e => { e.preventDefault(); setDragging(true); }}
+                  onDragLeave={() => setDragging(false)}
+                  onDrop={e => { 
+                    e.preventDefault(); 
+                    setDragging(false); 
+                    if(e.dataTransfer.files) setAddFilesList(prev => [...prev, ...Array.from(e.dataTransfer.files as Iterable<File> | ArrayLike<File>)]); 
+                  }}
+                  onClick={() => {
+                      const input = document.createElement("input");
+                      input.type = "file";
+                      input.multiple = true;
+                      input.accept = ".pdf,.txt,.csv,.docx,.json";
+                      input.onchange = (ev: any) => {
+                          if(ev.target.files) setAddFilesList(prev => [...prev, ...Array.from(ev.target.files as Iterable<File> | ArrayLike<File>)]);
+                      };
+                      input.click();
+                  }}
+                >
+                  <span className="text-[#60a5fa] flex justify-center mb-3"><Icons.FolderOpen /></span>
+                  <p className="text-sm text-foreground font-medium mb-1">Drag & drop files here or click to browse</p>
+                  <p className="text-xs text-muted-foreground">Accepts .pdf, .txt, .csv, .docx, .json</p>
+                </div>
+
+                {addFilesList.length > 0 && (
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-muted-foreground block mb-1">Selected Files ({addFilesList.length})</label>
+                    <div className="flex flex-col gap-2 max-h-32 overflow-y-auto pr-1">
+                      {addFilesList.map((f, i) => (
+                         <div key={i} className="flex justify-between items-center text-xs text-foreground bg-background p-2 rounded-lg border border-border">
+                           <div className="truncate flex-1 pr-3 font-mono">{f.name} <span className="text-muted-foreground text-[10px] ml-1">({(f.size / 1024).toFixed(1)} KB)</span></div>
+                           <button onClick={() => setAddFilesList(prev => prev.filter((_, idx) => idx !== i))} className="text-muted-foreground hover:text-red-400 p-1 rounded-md transition-colors"><Icons.X /></button>
+                         </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-1.5 pt-2">
+                  <label className="text-xs font-semibold text-muted-foreground">Default Category (Optional)</label>
+                  <div className="relative">
+                    <select 
+                      value={addFilesCategory}
+                      onChange={e => setAddFilesCategory(e.target.value)}
+                      className="w-full bg-background border border-border rounded-lg pl-3 pr-10 py-2.5 text-sm text-foreground appearance-none focus:outline-none focus:border-violet-500"
+                    >
+                      <option value="">Select Category...</option>
+                      <option value="Roads and Sanitation">Roads and Sanitation</option>
+                      <option value="Electricity">Electricity</option>
+                      <option value="Water Supply">Water Supply</option>
+                      <option value="Network">Network</option>
+                      <option value="Other">Other</option>
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                       <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3 justify-end mt-6 pt-4 border-t border-border/60">
+                 <button onClick={handleAddFilesSubmit} disabled={uploadingFiles || addFilesList.length === 0} className="w-full sm:w-auto px-6 py-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-foreground text-sm rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
+                    {uploadingFiles ? <span className="animate-spin inline-block"><Icons.Refresh /></span> : <Icons.Upload />}
+                    Upload Files
+                 </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'add-text' && (
+            <div className="bg-card border border-border rounded-xl p-6 mt-4">
+              <h2 className="text-base font-semibold text-foreground mb-1">Add Text</h2>
+              <p className="text-xs text-muted-foreground mb-5">Create a dedicated knowledge document directly from unstructured text.</p>
+              
+              <div className="flex-1 space-y-4 pr-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">Document Name</label>
+                    <input 
+                      value={addTextForm.name}
+                      onChange={e => setAddTextForm(p => ({...p, name: e.target.value}))}
+                      placeholder="e.g. water_supply_rules"
+                      className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-violet-500 transition-all font-mono"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">Category</label>
+                    <div className="relative">
+                      <select 
+                        value={addTextForm.category}
+                        onChange={e => setAddTextForm(p => ({...p, category: e.target.value}))}
+                        className="w-full bg-background border border-border rounded-lg pl-3 pr-10 py-2.5 text-sm text-foreground appearance-none focus:outline-none focus:border-violet-500 transition-all"
+                      >
+                        <option value="">Select Category...</option>
+                        <option value="Roads and Sanitation">Roads and Sanitation</option>
+                        <option value="Electricity">Electricity</option>
+                        <option value="Water Supply">Water Supply</option>
+                        <option value="Network">Network</option>
+                        <option value="Other">Other</option>
+                      </select>
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                         <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><polyline points="6 9 12 15 18 9"/></svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 h-full flex flex-col pt-2">
+                  <label className="text-xs font-semibold text-muted-foreground">Content</label>
+                  <textarea 
+                    value={addTextForm.content}
+                    onChange={e => setAddTextForm(p => ({...p, content: e.target.value}))}
+                    placeholder="Paste or type your text content here..."
+                    className="w-full min-h-[200px] flex-1 bg-background border border-border rounded-lg p-4 text-sm text-foreground font-mono resize-y focus:outline-none focus:border-violet-500 leading-relaxed shadow-inner"
+                  />
+                  <p className="text-[10px] text-muted-foreground mt-1 pl-1 font-medium">Supports plain text. Each paragraph or line break may be treated as a separate entry.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3 justify-end mt-6 pt-4 border-t border-border/60">
+                 <button onClick={handleAddTextSubmit} disabled={savingText} className="w-full sm:w-auto px-6 py-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-foreground text-sm rounded-xl font-medium transition-colors flex items-center justify-center gap-2 shadow-lg shadow-violet-500/20">
+                    {savingText ? <span className="animate-spin inline-block"><Icons.Refresh /></span> : <Icons.Check />}
+                    Save Text
+                 </button>
+              </div>
+            </div>
+          )}
+
+          <div className="mt-8 flex-1 flex flex-col min-h-0">
               {/* Search */}
               <div className="flex items-center gap-3 mb-6">
                 <div className="flex-1 relative">
@@ -786,7 +1040,6 @@ export default function KnowledgeBase() {
                 )}
               </div>
             </div>
-          )}
 
           {/* Hidden file input */}
           <input
@@ -798,599 +1051,227 @@ export default function KnowledgeBase() {
             onChange={e => handleFiles(e.target.files)}
           />
 
-          {/* Upload Modal */}
-          {showUploadModal && (
-            <div className="fixed inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center z-50">
-              <div className="bg-background border border-border rounded-2xl p-6 w-full max-w-md shadow-2xl">
-                <h2 className="text-base font-semibold text-foreground mb-1">Upload JSON File</h2>
-                <p className="text-xs text-muted-foreground mb-5">Upload grievance JSON files to the knowledge base</p>
-                <div
-                  className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 cursor-pointer ${
-                    dragging ? 'border-violet-500/70 bg-violet-500/10' : 'border-border hover:border-zinc-500 hover:bg-card/30'
-                  }`}
-                  onDragOver={e => { e.preventDefault(); setDragging(true); }}
-                  onDragLeave={() => setDragging(false)}
-                  onDrop={e => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files); }}
-                  onClick={() => fileRef.current?.click()}
-                >
-                  <span className="text-muted-foreground flex justify-center mb-3"><Icons.Upload /></span>
-                  <p className="text-sm text-foreground font-medium mb-1">Click to browse or drag JSON files here</p>
-                  <p className="text-xs text-muted-foreground">Only .json files are supported</p>
-                </div>
-                {uploading && (
-                  <div className="flex items-center gap-2 mt-4 text-xs text-muted-foreground">
-                    <span className="animate-spin inline-block"><Icons.Refresh /></span>
-                    Uploading to backend...
-                  </div>
-                )}
-                <div className="flex gap-3 justify-end mt-5">
-                  <button onClick={() => setShowUploadModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">Close</button>
-                  <button
-                    onClick={() => fileRef.current?.click()}
-                    className="px-5 py-2 bg-violet-600 hover:bg-violet-500 text-foreground text-sm rounded-lg font-medium transition-colors flex items-center gap-2"
-                  >
-                    <Icons.Upload />
-                    Browse Files
+          {/* File Browser Drawer */}
+          {showFileBrowser && (
+            <>
+              <div className="fixed inset-0 bg-background/50 backdrop-blur-sm z-40" onClick={() => setShowFileBrowser(false)} />
+              <div className="fixed inset-y-0 right-0 w-[480px] bg-background border-l border-border z-50 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
+                <div className="flex items-center justify-between p-6 border-b border-border">
+                  <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                    <Icons.FolderOpen />
+                    Uploaded Files
+                  </h2>
+                  <button onClick={() => setShowFileBrowser(false)} className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full transition-colors">
+                    <Icons.X />
                   </button>
                 </div>
-              </div>
-            </div>
-          )}
-
-          {/* Sample JSON Modal */}
-          {showSampleModal && (
-            <div className="fixed inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center z-50">
-              <div className="bg-background border border-border rounded-2xl p-6 w-full max-w-2xl shadow-2xl max-h-[85vh] overflow-y-auto">
-                <h2 className="text-base font-semibold text-foreground mb-1">Sample Grievance JSONs</h2>
-                <p className="text-xs text-muted-foreground mb-5">Pre-built templates — click Upload to add directly to your backend knowledge base</p>
-                <div className="space-y-4">
-                  {SAMPLE_JSONS.map((sample, i) => (
-                    <div key={i} className="bg-card/50 border border-border/50 rounded-xl p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-amber-400"><Icons.FileJson /></span>
-                          <span className="text-sm font-medium text-foreground">{sample.title}</span>
-                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${sample.color}`}>
-                            {sample.tag}
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => uploadSampleJson(sample)}
-                          disabled={uploading}
-                          className="text-xs px-3 py-1.5 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-foreground rounded-lg font-medium transition-colors flex items-center gap-1.5"
-                        >
-                          {uploading ? <span className="animate-spin inline-block"><Icons.Refresh /></span> : <Icons.Upload />}
-                          Upload to KB
-                        </button>
-                      </div>
-                      <pre className="text-xs text-muted-foreground bg-background rounded-lg p-3 overflow-x-auto max-h-36 overflow-y-auto border border-border">
-                        {JSON.stringify(sample.json, null, 2)}
-                      </pre>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex justify-end mt-5">
-                  <button onClick={() => setShowSampleModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">Close</button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* URL Modal */}
-          {showUrlModal && (
-            <div className="fixed inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center z-50">
-              <div className="bg-background border border-border rounded-2xl p-6 w-full max-w-md shadow-2xl">
-                <h2 className="text-base font-semibold text-foreground mb-4">Add URL</h2>
-                <input
-                  value={urlInput}
-                  onChange={e => setUrlInput(e.target.value)}
-                  placeholder="https://example.com"
-                  className="w-full bg-card border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-zinc-500 mb-4"
-                />
-                <div className="flex gap-3 justify-end">
-                  <button onClick={() => setShowUrlModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
-                  <button onClick={handleAddUrl} className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-foreground text-sm rounded-lg font-medium transition-colors">Add</button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* DB Modal */}
-          {showDbModal && (
-            <div className="fixed inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center z-50">
-              <div className="bg-background border border-border rounded-2xl p-6 w-full max-w-md shadow-2xl">
-                <h2 className="text-base font-semibold text-foreground mb-1">Connect to Database</h2>
-                <p className="text-xs text-muted-foreground mb-5">Enter your database connection details</p>
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">Host</label>
-                      <input value={dbConfig.host} onChange={e => setDbConfig(p => ({...p, host: e.target.value}))} placeholder="localhost" className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-zinc-500" />
-                    </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">Port</label>
-                      <input value={dbConfig.port} onChange={e => setDbConfig(p => ({...p, port: e.target.value}))} placeholder="5432" className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-zinc-500" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Database Name</label>
-                    <input value={dbConfig.name} onChange={e => setDbConfig(p => ({...p, name: e.target.value}))} placeholder="my_database" className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-zinc-500" />
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Username</label>
-                    <input value={dbConfig.user} onChange={e => setDbConfig(p => ({...p, user: e.target.value}))} placeholder="postgres" className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-zinc-500" />
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Password</label>
-                    <input type="password" value={dbConfig.password} onChange={e => setDbConfig(p => ({...p, password: e.target.value}))} placeholder="••••••••" className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-zinc-500" />
-                  </div>
-                </div>
-                <div className="flex gap-3 justify-end mt-5">
-                  <button onClick={() => setShowDbModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
-                  <button
-                    onClick={() => {
-                      if (!dbConfig.host || !dbConfig.name) return;
-                      showToast(`Connected to ${dbConfig.name}`, "success");
-                      setDbConfig({ host: "", port: "", name: "", user: "", password: "" });
-                      setShowDbModal(false);
-                    }}
-                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-foreground text-sm rounded-lg font-medium transition-colors"
-                  >
-                    Connect
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* View File Modal */}
-          {selectedFile && (
-            <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="bg-background border border-border rounded-xl w-full max-w-4xl shadow-2xl flex flex-col h-[80vh] max-h-[90vh]">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 border-b border-border bg-background rounded-t-xl gap-4">
-                  <div className="min-w-0">
-                    <h2 className="text-xl font-semibold text-foreground flex items-center gap-3 truncate">
-                      <span className="text-muted-foreground">
-                        {getFileType(selectedFile.filename) === 'json' ? <Icons.FileJson /> : <Icons.File />}
-                      </span>
-                      <span className="truncate">{selectedFile.name}</span>
-                    </h2>
-                    <div className="flex items-center flex-wrap gap-2 mt-2">
-                      {selectedFile.category && (
-                        <span className="text-xs px-2.5 py-1 rounded-full bg-muted text-muted-foreground border border-border font-medium">
-                          {selectedFile.category}
-                        </span>
-                      )}
-                      {getFileType(selectedFile.filename) === 'json' && (
-                        <span className="text-xs px-2.5 py-1 rounded-full bg-muted text-muted-foreground border border-border font-medium">
-                          {selectedFile.policies_count || 0} policies
-                        </span>
-                      )}
-                      {selectedFile.size && (
-                        <span className="text-xs px-2.5 py-1 rounded-full bg-muted text-muted-foreground border border-border font-medium">
-                          {selectedFile.size}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <button 
-                      onClick={() => {
-                        navigator.clipboard.writeText(rawContentStr);
-                        setCopied(true);
-                        setTimeout(() => setCopied(false), 2000);
-                        showToast("Copied to clipboard", "success");
-                      }}
-                      className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-foreground bg-card hover:bg-muted border border-border transition-colors rounded-lg shadow-sm"
-                    >
-                      {copied ? <Icons.Check /> : <Icons.Copy />} <span className="hidden sm:inline">{copied ? "Copied" : "Copy"}</span>
-                    </button>
-                    <button 
-                      onClick={() => {
-                        if (selectedFile.source === 'local') {
-                          const localSample = SAMPLE_JSONS.find(s => s.filename === selectedFile.filename);
-                          if (localSample) {
-                            const blob = new Blob([JSON.stringify(localSample.json, null, 2)], { type: "application/json" });
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement("a");
-                            a.href = url;
-                            a.download = selectedFile.filename || "file.json";
-                            a.click();
-                            URL.revokeObjectURL(url);
-                          }
-                        } else {
-                          const a = document.createElement("a");
-                          a.href = `${API_BASE}/knowledge/${selectedFile.filename || selectedFile.id}`;
-                          a.download = selectedFile.filename || selectedFile.id;
-                          a.target = "_blank";
-                          a.click();
-                        }
-                      }}
-                      className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-foreground bg-card hover:bg-muted border border-border transition-colors rounded-lg shadow-sm"
-                    >
-                      <Icons.Download /> <span className="hidden sm:inline">Download</span>
-                    </button>
-                    <div className="w-px h-6 bg-border mx-1 hidden sm:block"></div>
-                    <button onClick={() => { setSelectedFile(null); setFileContent(null); }} className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-full transition-colors ml-1">
-                      <Icons.X />
-                    </button>
-                  </div>
-                </div>
                 
+                <div className="flex items-center gap-4 px-6 border-b border-border overflow-x-auto no-scrollbar">
+                  {["All", "PDF", "JSON", "TXT", "CSV", "Other"].map(cat => {
+                    let count = docs.length;
+                    if (cat !== "All") {
+                      count = docs.filter(d => {
+                        const type = getFileType(d.filename);
+                        if (cat === "Other") return !["pdf", "json", "text", "csv"].includes(type);
+                        if (cat === "TXT") return type === "text";
+                        return type === cat.toLowerCase();
+                      }).length;
+                    }
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => setActiveFileCategory(cat)}
+                        className={`py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${
+                          activeFileCategory === cat 
+                            ? 'text-foreground border-primary' 
+                            : 'text-muted-foreground border-transparent hover:text-foreground'
+                        }`}
+                      >
+                        {cat} <span className="text-xs opacity-60 ml-1">({count})</span>
+                      </button>
+                    );
+                  })}
+                </div>
 
-                
-                <div className="p-6 overflow-hidden flex-1 bg-background flex flex-col min-h-0">
-                  {loadingContent ? (
-                    <div className="flex flex-col items-center justify-center h-full gap-4">
-                      <span className="animate-spin inline-block text-muted-foreground"><Icons.Refresh /></span>
-                      <p className="text-muted-foreground text-sm">Fetching document contents...</p>
-                    </div>
-                  ) : fileContent !== null ? (
-                    <div className="relative flex-1 overflow-hidden rounded-lg border border-border">
-                      <div className="h-full overflow-auto bg-muted">
-                        <div className="flex min-w-max font-mono text-sm">
-                          <div className="select-none border-r border-border bg-muted px-3 py-4 text-right text-muted-foreground min-w-[48px] sticky left-0 flex-shrink-0">
-                            {rawContentStr.split('\n').map((_, i) => (
-                              <div key={i} className="leading-6">{i + 1}</div>
-                            ))}
+                <div className="flex-1 overflow-y-auto">
+                  {docs.filter(d => {
+                    if (activeFileCategory === "All") return true;
+                    const type = getFileType(d.filename);
+                    if (activeFileCategory === "Other") return !["pdf", "json", "text", "csv"].includes(type);
+                    if (activeFileCategory === "TXT") return type === "text";
+                    return type === activeFileCategory.toLowerCase();
+                  }).map((file) => {
+                    const type = getFileType(file.filename);
+                    let IconComp = Icons.File;
+                    let iconColor = "text-muted-foreground";
+                    if (type === "pdf") { IconComp = Icons.FileText; iconColor = "text-red-400"; }
+                    else if (type === "json") { IconComp = Icons.Braces; iconColor = "text-amber-400"; }
+                    else if (type === "text") { IconComp = Icons.FileText; iconColor = "text-blue-400"; }
+                    else if (type === "csv") { IconComp = Icons.Table; iconColor = "text-emerald-400"; }
+                    
+                    return (
+                      <div key={file.id} className="flex items-center justify-between px-6 py-4 border-b border-border hover:bg-muted/50 cursor-pointer transition-colors group">
+                        <div className="flex items-center gap-4 min-w-0 flex-1">
+                          <div className={`p-2 rounded-lg bg-card border border-border flex-shrink-0 ${iconColor}`}>
+                            <IconComp />
                           </div>
-                          <pre className="px-4 py-4 text-foreground leading-6 whitespace-pre">
-                            {rawContentStr}
-                          </pre>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-bold text-foreground truncate">{file.filename || file.name}</p>
+                              <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[10px] font-medium uppercase tracking-wider flex-shrink-0">
+                                {type === 'text' ? 'TXT' : type === 'image' ? 'IMG' : type}
+                              </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {formatSize(file.size)} • {file.created_at || file.uploadedAt ? new Date(file.created_at || file.uploadedAt || file.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : new Date(file.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-4 flex-shrink-0">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const fileUrl = `${API_BASE}/knowledge/${file.filename || file.id}`;
+                              const formattedDate = file.created_at || file.uploadedAt ? new Date(file.created_at || file.uploadedAt || file.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : new Date(file.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                              window.open(`/knowledge-base/preview?file=${encodeURIComponent(fileUrl)}&name=${encodeURIComponent(file.filename || file.name)}&type=${type}&size=${encodeURIComponent(formatSize(file.size))}&date=${encodeURIComponent(formattedDate)}`, '_blank');
+                            }}
+                            className="p-2 text-muted-foreground hover:text-blue-400 hover:bg-blue-500/10 rounded-md transition-colors"
+                            title="Preview"
+                          >
+                            <Icons.Eye />
+                          </button>
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              setEditingFile(file);
+                              setEditError('');
+                              setEditContent('');
+                              if (["pdf", "image", "unknown"].includes(type)) return;
+                              try {
+                                const res = await fetch(`${API_BASE}/knowledge/${file.filename || file.id}`);
+                                const text = await res.text();
+                                if (type === 'json') {
+                                  try { setEditContent(JSON.stringify(JSON.parse(text), null, 2)); }
+                                  catch { setEditContent(text); }
+                                } else { setEditContent(text); }
+                              } catch (err) { setEditError('Failed to fetch file content'); }
+                            }}
+                            className="p-2 text-muted-foreground hover:text-amber-400 hover:bg-amber-500/10 rounded-md transition-colors"
+                            title="Edit"
+                          >
+                            <Icons.Edit />
+                          </button>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const a = document.createElement("a");
+                              a.href = `${API_BASE}/knowledge/${file.filename || file.id}`;
+                              a.download = file.filename || file.name;
+                              a.target = "_blank";
+                              a.click();
+                            }}
+                            className="p-2 text-muted-foreground hover:text-emerald-400 hover:bg-emerald-500/10 rounded-md transition-colors"
+                            title="Download"
+                          >
+                            <Icons.Download />
+                          </button>
                         </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full gap-3 border border-dashed border-border rounded-xl bg-muted/30">
-                      <span className="text-muted-foreground"><Icons.File /></span>
-                      <p className="text-muted-foreground text-sm">No content available to display.</p>
+                    );
+                  })}
+                  
+                  {docs.length === 0 && (
+                    <div className="p-8 text-center text-muted-foreground text-sm">
+                      No files found for this category.
                     </div>
                   )}
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* Delete Confirmation Modal */}
-          {docToDelete && (
-            <div className="fixed inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="bg-background border border-border rounded-2xl p-6 w-full max-w-sm shadow-2xl">
-                <h2 className="text-lg font-semibold text-foreground mb-2">Delete File?</h2>
-                <p className="text-sm text-muted-foreground mb-6 leading-relaxed">Are you sure you want to delete <span className="text-foreground font-medium">{docToDelete.name}</span>? This action cannot be undone.</p>
-                <div className="flex gap-3 justify-end">
-                  <button onClick={() => setDocToDelete(null)} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
-                  <button 
-                    onClick={() => {
-                      removeDoc(docToDelete);
-                      setDocToDelete(null);
-                    }} 
-                    className="px-5 py-2 bg-red-600 hover:bg-red-500 text-foreground text-sm rounded-lg font-medium transition-colors"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
+            </>
           )}
 
           {/* Edit File Modal */}
           {editingFile && (
-            <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="bg-background border border-border rounded-2xl w-full max-w-[800px] shadow-2xl flex flex-col h-auto max-h-[90vh]">
-                
-                {/* Header */}
-                <div className="flex items-center justify-between p-5 border-b border-border/60 bg-background rounded-t-2xl">
-                  <h2 className="text-lg font-semibold text-foreground flex items-center gap-3">
-                    <span className="text-amber-400"><Icons.Edit /></span>
-                    Edit File <span className="text-muted-foreground text-sm font-normal">({editingFile.name})</span>
-                  </h2>
-                  <div className="flex items-center gap-2">
-                    {editMode === "rules" ? (
-                      <button onClick={() => setEditMode("raw")} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground border border-border/50 hover:border-zinc-500 rounded-lg transition-colors">
-                        <Icons.Code /> Edit Raw JSON
-                      </button>
-                    ) : (
-                      <button onClick={() => setEditMode("rules")} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground border border-border/50 hover:border-zinc-500 rounded-lg transition-colors">
-                        <Icons.Edit /> Edit Rules
-                      </button>
-                    )}
-                    <button onClick={() => setEditingFile(null)} className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-full transition-colors ml-1">
-                      <Icons.X />
-                    </button>
-                  </div>
+            <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+              <div className="bg-card border border-border rounded-xl p-6 w-[560px] max-h-[80vh] flex flex-col gap-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-foreground">Edit File — {editingFile.filename || editingFile.name}</h2>
+                  <button onClick={() => setEditingFile(null)} className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full transition-colors">
+                    <Icons.X />
+                  </button>
                 </div>
                 
-                {editMode === "raw" ? (
-                  <div className="p-6 overflow-y-auto flex-1 font-sans text-sm bg-background/60 flex flex-col h-[60vh] max-h-[70vh]">
-                    <div className="flex items-center justify-between mb-3">
-                      <label className="text-xs font-semibold text-muted-foreground">Raw JSON Content</label>
+                {["pdf", "image", "unknown"].includes(getFileType(editingFile.filename)) ? (
+                  <div className="flex-1 flex flex-col items-center justify-center py-12 text-center">
+                    <div className="p-4 bg-muted/30 rounded-full mb-4">
+                      <Icons.FileText />
                     </div>
-                    {rawJsonError && (
-                      <div className="text-red-400 text-xs mb-3 font-medium bg-red-500/10 p-3 rounded-lg border border-red-500/20">{rawJsonError}</div>
-                    )}
-                    <textarea
-                      value={rawJsonText}
-                      onChange={(e) => {
-                        setRawJsonText(e.target.value);
-                        setRawJsonError("");
-                      }}
-                      className="w-full flex-1 bg-background border border-border rounded-xl p-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all font-mono resize-none leading-relaxed"
-                      spellCheck={false}
-                    />
+                    <p className="text-sm font-medium text-foreground mb-1">Editing not supported</p>
+                    <p className="text-xs text-muted-foreground mb-6">PDF and image files cannot be edited directly.</p>
+                    <button onClick={() => setEditingFile(null)} className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:opacity-90 transition-opacity">
+                      Re-upload
+                    </button>
                   </div>
                 ) : (
-                  <div className="p-6 overflow-y-auto flex-1 font-sans text-sm bg-background/60 space-y-6 max-h-[70vh]">
-                    {/* File Name & Category */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-semibold text-muted-foreground">File Name</label>
-                        <input 
-                          value={editForm.name}
-                          onChange={e => setEditForm(p => ({...p, name: e.target.value}))}
-                          className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all font-mono"
-                          placeholder="e.g. bbmp_roads_sanitation.json"
-                        />
-                      </div>
-                      
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-semibold text-muted-foreground">Category</label>
-                        <div className="relative">
-                          <select 
-                            value={editForm.category}
-                            onChange={e => setEditForm(p => ({...p, category: e.target.value}))}
-                            className="w-full bg-background border border-border rounded-xl pl-4 pr-10 py-2.5 text-sm text-foreground appearance-none focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all"
-                          >
-                            <option value="">Select Category...</option>
-                            <option value="Roads and Sanitation">Roads and Sanitation</option>
-                            <option value="Electricity">Electricity</option>
-                            <option value="Water Supply">Water Supply</option>
-                            <option value="Network">Network</option>
-                            <option value="Other">Other</option>
-                          </select>
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
-                             <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><polyline points="6 9 12 15 18 9"/></svg>
-                          </div>
+                  <>
+                    <div className="flex-1 relative">
+                      <textarea
+                        value={editContent}
+                        onChange={(e) => setEditContent(e.target.value)}
+                        className={`font-mono text-sm bg-muted border rounded-lg p-3 w-full h-[400px] resize-none text-foreground focus:outline-none focus:ring-1 focus:ring-primary ${editError ? 'border-red-500' : 'border-border'}`}
+                        placeholder="Loading content..."
+                      />
+                      {editError && (
+                        <div className="absolute bottom-3 left-3 right-3 text-xs text-red-500 bg-red-500/10 px-3 py-2 rounded border border-red-500/20">
+                          {editError}
                         </div>
-                      </div>
+                      )}
                     </div>
-
-                    <hr className="border-border/80" />
-
-                    {/* Rules Settings */}
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                          Policies / Rules
-                          <span className="bg-card text-muted-foreground px-2 py-0.5 rounded-full text-xs">{editForm.rules.length}</span>
-                        </h3>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        {editForm.rules.length === 0 ? (
-                          <div className="text-center py-8 bg-background/30 rounded-xl border border-dashed border-border">
-                            <p className="text-muted-foreground text-sm">No rules defined yet.</p>
-                          </div>
-                        ) : (
-                          editForm.rules.map((rule, index) => (
-                            <div key={index} className="bg-background border border-border rounded-xl p-4 transition-colors focus-within:border-border focus-within:bg-background">
-                              <div className="flex items-center justify-between mb-3 border-b border-border/50 pb-2">
-                                <span className="text-xs font-semibold text-violet-400 uppercase tracking-wider">Rule {index + 1}</span>
-                                <button 
-                                  onClick={() => handleEditRuleDelete(index)} 
-                                  className="text-muted-foreground hover:text-red-400 hover:bg-red-500/10 p-1 rounded-md transition-colors"
-                                >
-                                  <Icons.Trash />
-                                </button>
-                              </div>
-                              <div className="space-y-3">
-                                <input
-                                  placeholder="Rule title (e.g., Water supply restored within 48 hours)"
-                                  value={rule.title || rule.name || rule.rule || ''}
-                                  onChange={e => handleRuleChange(index, rule.title !== undefined ? 'title' : (rule.name !== undefined ? 'name' : 'rule'), e.target.value)}
-                                  className="w-full bg-background/50 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-violet-500 transition-colors"
-                                />
-                                <textarea
-                                  placeholder="Rule description or extra details..."
-                                  value={rule.description || rule.desc || ''}
-                                  onChange={e => handleRuleChange(index, rule.description !== undefined ? 'description' : 'desc', e.target.value)}
-                                  rows={2}
-                                  className="w-full bg-background/50 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-violet-500 transition-colors resize-none"
-                                />
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                      
+                    <div className="flex justify-end gap-3 mt-2">
                       <button 
-                        onClick={handleAddRule} 
-                        className="w-full py-3 border border-dashed border-border text-muted-foreground hover:text-foreground hover:bg-background rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                        onClick={() => setEditingFile(null)}
+                        className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground text-sm font-medium rounded-lg transition-colors"
                       >
-                        <span className="text-lg leading-none mt-[-2px]">+</span> Add New Rule
+                        Cancel
+                      </button>
+                      <button 
+                        onClick={async () => {
+                          const type = getFileType(editingFile.filename);
+                          if (type === 'json') {
+                            try {
+                              JSON.parse(editContent);
+                              setEditError('');
+                            } catch (e: any) {
+                              setEditError(`Invalid JSON: ${e.message}`);
+                              return;
+                            }
+                          }
+                          setSavingEdit(true);
+                          try {
+                            const res = await fetch(`${API_BASE}/knowledge/${editingFile.id || editingFile.filename}`, {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ content: editContent })
+                            });
+                            if (!res.ok) throw new Error('Failed to save');
+                            showToast("File updated successfully", "success");
+                            setEditingFile(null);
+                            fetchDocs();
+                          } catch (err) {
+                            setEditError("Failed to save changes.");
+                          } finally {
+                            setSavingEdit(false);
+                          }
+                        }}
+                        disabled={savingEdit}
+                        className="px-4 py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+                      >
+                        {savingEdit && <span className="animate-spin inline-block"><Icons.Refresh /></span>}
+                        Save Changes
                       </button>
                     </div>
-                  </div>
+                  </>
                 )}
-
-                {/* Footer */}
-                <div className="p-5 border-t border-border/60 bg-background rounded-b-2xl flex items-center justify-between">
-                  <button 
-                    onClick={() => {
-                      let dataStr = "";
-                      if (editMode === "raw") dataStr = rawJsonText;
-                      else dataStr = JSON.stringify(editForm, null, 2);
-                      const blob = new Blob([dataStr], { type: "application/json" });
-                      const url = URL.createObjectURL(blob);
-                      const a = document.createElement("a");
-                      a.href = url;
-                      a.download = editingFile?.filename || "file.json";
-                      a.click();
-                      URL.revokeObjectURL(url);
-                    }}
-                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors bg-card/50 hover:bg-card rounded-lg border border-border/50 shadow-sm"
-                  >
-                    <Icons.Download /> Download JSON
-                  </button>
-                  <div className="flex items-center gap-3">
-                    <button onClick={() => setEditingFile(null)} className="px-5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                      Cancel
-                    </button>
-                    <button 
-                      onClick={handleSaveEdit} 
-                      disabled={savingEdit}
-                      className="px-6 py-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-foreground text-sm rounded-xl font-medium transition-all shadow-lg shadow-violet-500/20 flex items-center gap-2"
-                    >
-                      {savingEdit ? <span className="animate-spin inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full"></span> : <Icons.Check />}
-                      Save Changes
-                    </button>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-          )}
-          {/* Add Files Modal */}
-          {showAddFilesModal && (
-            <div className="fixed inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="bg-background border border-border rounded-2xl p-6 w-full max-w-lg shadow-2xl flex flex-col h-auto max-h-[90vh]">
-                <h2 className="text-base font-semibold text-foreground mb-1">Add Files</h2>
-                <p className="text-xs text-muted-foreground mb-5">Upload multiple documents formats to process.</p>
-                
-                <div className="flex-1 overflow-y-auto space-y-5 pr-2">
-                  <div
-                    className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 cursor-pointer ${
-                      dragging ? 'border-[#60a5fa]/70 bg-[#60a5fa]/10' : 'border-border hover:border-zinc-500 hover:bg-card/30'
-                    }`}
-                    onDragOver={e => { e.preventDefault(); setDragging(true); }}
-                    onDragLeave={() => setDragging(false)}
-                    onDrop={e => { 
-                      e.preventDefault(); 
-                      setDragging(false); 
-                      if(e.dataTransfer.files) setAddFilesList(prev => [...prev, ...Array.from(e.dataTransfer.files as Iterable<File> | ArrayLike<File>)]); 
-                    }}
-                    onClick={() => {
-                        const input = document.createElement("input");
-                        input.type = "file";
-                        input.multiple = true;
-                        input.accept = ".pdf,.txt,.csv,.docx,.json";
-                        input.onchange = (ev: any) => {
-                            if(ev.target.files) setAddFilesList(prev => [...prev, ...Array.from(ev.target.files as Iterable<File> | ArrayLike<File>)]);
-                        };
-                        input.click();
-                    }}
-                  >
-                    <span className="text-[#60a5fa] flex justify-center mb-3"><Icons.FolderOpen /></span>
-                    <p className="text-sm text-foreground font-medium mb-1">Drag & drop files here or click to browse</p>
-                    <p className="text-xs text-muted-foreground">Accepts .pdf, .txt, .csv, .docx, .json</p>
-                  </div>
-
-                  {addFilesList.length > 0 && (
-                    <div className="space-y-2">
-                      <label className="text-xs font-semibold text-muted-foreground block mb-1">Selected Files ({addFilesList.length})</label>
-                      <div className="flex flex-col gap-2 max-h-32 overflow-y-auto pr-1">
-                        {addFilesList.map((f, i) => (
-                           <div key={i} className="flex justify-between items-center text-xs text-foreground bg-card/50 p-2 rounded-lg border border-border/50">
-                             <div className="truncate flex-1 pr-3 font-mono">{f.name} <span className="text-muted-foreground text-[10px] ml-1">({(f.size / 1024).toFixed(1)} KB)</span></div>
-                             <button onClick={() => setAddFilesList(prev => prev.filter((_, idx) => idx !== i))} className="text-muted-foreground hover:text-red-400 p-1 rounded-md transition-colors"><Icons.X /></button>
-                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="space-y-1.5 pt-2">
-                    <label className="text-xs font-semibold text-muted-foreground">Default Category (Optional)</label>
-                    <div className="relative">
-                      <select 
-                        value={addFilesCategory}
-                        onChange={e => setAddFilesCategory(e.target.value)}
-                        className="w-full bg-card border border-border rounded-lg pl-3 pr-10 py-2.5 text-sm text-foreground appearance-none focus:outline-none focus:border-violet-500"
-                      >
-                        <option value="">Select Category...</option>
-                        <option value="Roads and Sanitation">Roads and Sanitation</option>
-                        <option value="Electricity">Electricity</option>
-                        <option value="Water Supply">Water Supply</option>
-                        <option value="Network">Network</option>
-                        <option value="Other">Other</option>
-                      </select>
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
-                         <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><polyline points="6 9 12 15 18 9"/></svg>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-3 justify-end mt-6 pt-4 border-t border-border/60">
-                   <button onClick={() => setShowAddFilesModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
-                   <button onClick={handleAddFilesSubmit} disabled={uploadingFiles || addFilesList.length === 0} className="w-full sm:w-auto px-6 py-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-foreground text-sm rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
-                      {uploadingFiles ? <span className="animate-spin inline-block"><Icons.Refresh /></span> : <Icons.Upload />}
-                      Upload Files
-                   </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Add Text Modal */}
-          {showAddTextModal && (
-            <div className="fixed inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="bg-background border border-border rounded-2xl p-6 w-full max-w-2xl shadow-2xl flex flex-col h-auto max-h-[90vh]">
-                <h2 className="text-base font-semibold text-foreground mb-1">Add Text</h2>
-                <p className="text-xs text-muted-foreground mb-5">Create a dedicated knowledge document directly from unstructured text.</p>
-                
-                <div className="flex-1 overflow-y-auto space-y-4 pr-2">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-muted-foreground">Document Name</label>
-                      <input 
-                        value={addTextForm.name}
-                        onChange={e => setAddTextForm(p => ({...p, name: e.target.value}))}
-                        placeholder="e.g. water_supply_rules"
-                        className="w-full bg-card border border-border rounded-lg px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-violet-500 transition-all font-mono"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-muted-foreground">Category</label>
-                      <div className="relative">
-                        <select 
-                          value={addTextForm.category}
-                          onChange={e => setAddTextForm(p => ({...p, category: e.target.value}))}
-                          className="w-full bg-card border border-border rounded-lg pl-3 pr-10 py-2.5 text-sm text-foreground appearance-none focus:outline-none focus:border-violet-500 transition-all"
-                        >
-                          <option value="">Select Category...</option>
-                          <option value="Roads and Sanitation">Roads and Sanitation</option>
-                          <option value="Electricity">Electricity</option>
-                          <option value="Water Supply">Water Supply</option>
-                          <option value="Network">Network</option>
-                          <option value="Other">Other</option>
-                        </select>
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
-                           <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><polyline points="6 9 12 15 18 9"/></svg>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5 h-full flex flex-col pt-2">
-                    <label className="text-xs font-semibold text-muted-foreground">Content</label>
-                    <textarea 
-                      value={addTextForm.content}
-                      onChange={e => setAddTextForm(p => ({...p, content: e.target.value}))}
-                      placeholder="Paste or type your text content here..."
-                      className="w-full min-h-[200px] flex-1 bg-background/50 border border-border rounded-lg p-4 text-sm text-foreground font-mono resize-y focus:outline-none focus:border-violet-500 leading-relaxed shadow-inner"
-                    />
-                    <p className="text-[10px] text-muted-foreground mt-1 pl-1 font-medium">Supports plain text. Each paragraph or line break may be treated as a separate entry.</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-3 justify-end mt-6 pt-4 border-t border-border/60">
-                   <button onClick={() => setShowAddTextModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
-                   <button onClick={handleAddTextSubmit} disabled={savingText} className="w-full sm:w-auto px-6 py-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-foreground text-sm rounded-xl font-medium transition-colors flex items-center justify-center gap-2 shadow-lg shadow-violet-500/20">
-                      {savingText ? <span className="animate-spin inline-block"><Icons.Refresh /></span> : <Icons.Check />}
-                      Save Text
-                   </button>
-                </div>
               </div>
             </div>
           )}

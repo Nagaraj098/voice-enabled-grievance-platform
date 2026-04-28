@@ -1,9 +1,13 @@
 import { Bell, Book, MessageCircleQuestion } from "lucide-react";
-import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
+import { SignInButton, useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { useProfile } from "@/hooks/useProfile";
 import ThemeToggle from "./ThemeToggle";
 
 export default function Topbar() {
-  const { isSignedIn } = useUser();
+  const { user, isSignedIn } = useUser();
+  const { profile } = useProfile();
+  const router = useRouter();
 
   return (
     <div className="h-14 border-b border-zinc-200 dark:border-border bg-zinc-50 dark:bg-background flex items-center justify-between px-6 text-zinc-800 dark:text-foreground">
@@ -33,18 +37,24 @@ export default function Topbar() {
         <div className="flex items-center gap-4 pl-2">
           <ThemeToggle />
           {isSignedIn ? (
-            <div className="flex items-center gap-3 hover:opacity-80 transition cursor-pointer">
-              <UserButton 
-                appearance={{
-                  elements: {
-                    userButtonAvatarBox: "w-8 h-8 border border-border rounded-full",
-                  }
-                }}
-              />
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => router.push('/profile')}
+                className="w-8 h-8 rounded-full border border-border overflow-hidden hover:ring-2 hover:ring-primary transition-all cursor-pointer bg-muted"
+                title="Profile"
+              >
+                {profile?.avatar_url || user?.imageUrl ? (
+                  <img src={profile?.avatar_url || user?.imageUrl} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">
+                    {profile?.name?.charAt(0) || user?.firstName?.charAt(0) || "U"}
+                  </div>
+                )}
+              </button>
             </div>
           ) : (
             <SignInButton mode="modal">
-              <button className="px-4 py-1.5 bg-zinc-100 text-zinc-900 text-sm font-semibold rounded-md hover:bg-white transition-colors">
+              <button className="px-4 py-1.5 bg-primary text-primary-foreground text-sm font-semibold rounded-md hover:opacity-90 transition-colors">
                 Sign In
               </button>
             </SignInButton>
