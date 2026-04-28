@@ -57,7 +57,7 @@ export default function Home() {
   }, [slides.length]);
 
   return (
-    <div className="min-h-screen selection:bg-white/20 font-sans relative transition-colors duration-300 bg-white dark:bg-black text-zinc-900 dark:text-zinc-100">
+    <div className="min-h-screen selection:bg-white/20 font-sans relative transition-colors duration-300 bg-white dark:bg-background text-zinc-900 dark:text-foreground">
       {/* Background Soft Glows */}
       <div className="absolute top-[-10%] left-[10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] mix-blend-screen pointer-events-none" />
       <div className="absolute top-[20%] right-[-5%] w-[400px] h-[400px] bg-orange-500/20 rounded-full blur-[120px] mix-blend-screen pointer-events-none" />
@@ -71,17 +71,17 @@ export default function Home() {
           </div>
           <span className="text-xl font-medium tracking-tight">GRS</span>
         </div>
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-400">
-          <Link href="#features" className="hover:text-white transition-colors">Features</Link>
-          <Link href="#about" className="hover:text-white transition-colors">About</Link>
-          <Link href="#contact" className="hover:text-white transition-colors">Contact</Link>
+        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
+          <Link href="#features" className="hover:text-foreground transition-colors">Features</Link>
+          <Link href="#about" className="hover:text-foreground transition-colors">About</Link>
+          <Link href="#contact" className="hover:text-foreground transition-colors">Contact</Link>
         </div>
         <div className="flex items-center gap-3">
           <ThemeToggle />
           <Link
             href="/sign-in"
             prefetch={true}
-            className="text-sm font-medium px-5 py-2.5 rounded-full border border-zinc-800 hover:border-zinc-600 hover:text-white text-zinc-300 transition-colors bg-black/50 backdrop-blur-sm"
+            className="text-sm font-medium px-5 py-2.5 rounded-full border border-border hover:border-border hover:text-foreground text-foreground transition-colors bg-background/50 backdrop-blur-sm"
           >
             Login
           </Link>
@@ -91,14 +91,14 @@ export default function Home() {
       {/* Hero Section */}
       <main className="relative z-10 flex flex-col items-center justify-center text-center mt-24 md:mt-32 px-4 pb-0">
         <div style={{ animation: 'fade-up 0.9s ease forwards' }}>
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-zinc-300 mb-8 backdrop-blur-md">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-foreground mb-8 backdrop-blur-md">
             <span className="flex h-2 w-2 rounded-full bg-orange-500 animate-pulse"></span>
             Voice-Powered Grievance Platform
           </div>
           <h1 className="text-5xl md:text-7xl font-semibold tracking-[-0.02em] leading-[1.1] mb-6 max-w-4xl text-transparent bg-clip-text bg-gradient-to-b from-gray-900 to-gray-600 dark:from-white dark:to-white/70 mx-auto">
             Grievance Redressal System
           </h1>
-          <p className="text-lg md:text-xl text-zinc-400 max-w-2xl font-light leading-relaxed mb-10 mx-auto">
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl font-light leading-relaxed mb-10 mx-auto">
             Submit and track your grievances effortlessly using 
             voice-powered AI. Get real-time updates and resolutions 
             from the right authorities.
@@ -127,7 +127,7 @@ export default function Home() {
             <Link
               href="/sign-in"
               prefetch={true}
-              className="flex items-center gap-2 px-8 py-3.5 rounded-full text-base font-medium text-white border border-white/10 hover:bg-white/5 transition-all"
+              className="flex items-center gap-2 px-8 py-3.5 rounded-full text-base font-medium text-foreground border border-white/10 hover:bg-white/5 transition-all"
             >
               Login
             </Link>
@@ -152,7 +152,7 @@ export default function Home() {
       {/* Features Section */}
       <section className="bg-white text-black py-24 px-6">
         <div className="max-w-5xl mx-auto">
-          <p className="text-center text-xs font-semibold tracking-widest text-zinc-400 uppercase mb-4">
+          <p className="text-center text-xs font-semibold tracking-widest text-muted-foreground uppercase mb-4">
             For Citizens · Government · Authorities
           </p>
           <h2 className="text-4xl font-semibold text-center mb-16 tracking-tight">
@@ -170,11 +170,11 @@ export default function Home() {
                     key={i}
                     className="min-w-full bg-zinc-50 border border-zinc-100 rounded-2xl p-10"
                   >
-                    <div className="w-8 h-8 rounded-full bg-black mb-5 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full bg-background mb-5 flex items-center justify-center">
                       <div className="w-2.5 h-2.5 bg-white rounded-full" />
                     </div>
                     <h3 className="text-lg font-semibold mb-2 text-black">{card.title}</h3>
-                    <p className="text-zinc-500 text-sm leading-relaxed">{card.desc}</p>
+                    <p className="text-muted-foreground text-sm leading-relaxed">{card.desc}</p>
                   </div>
                 ))}
               </div>
@@ -187,7 +187,7 @@ export default function Home() {
                   key={i}
                   onClick={() => setCurrentSlide(i)}
                   className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                    i === currentSlide ? 'bg-black w-6' : 'bg-zinc-300'
+                    i === currentSlide ? 'bg-background w-6' : 'bg-zinc-300'
                   }`}
                 />
               ))}

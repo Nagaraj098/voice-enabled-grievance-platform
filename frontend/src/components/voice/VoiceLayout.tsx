@@ -269,6 +269,25 @@ export default function VoiceLayout() {
     setMounted(true);
   }, []);
 
+  // ── Cleanup on unmount ───────────────────────────────────────────────
+  useEffect(() => {
+    return () => {
+      if (room) {
+        room.remoteParticipants.forEach((participant) => {
+          participant.audioTrackPublications.forEach((pub) => {
+            if (pub.track) {
+              pub.track.stop();
+            }
+            if (pub.audioTrack) {
+              pub.audioTrack.detach();
+            }
+          });
+        });
+        room.disconnect();
+      }
+    };
+  }, [room]);
+
   // ── Rotate connecting messages ────────────────────────────────────────
   useEffect(() => {
     if (connectStatus !== 'connecting') return;
@@ -335,8 +354,31 @@ export default function VoiceLayout() {
   const handleConfirmEnd = async () => {
     setShowModal(false);
 
+    // ✅ Set UI state immediately before async ops
+    setActive(false);
+    setConnectStatus('idle');
+
     // ✅ Stop audio immediately
     stopAudio();
+
+    // 1. Stop all remote audio tracks first
+    if (room) {
+      room.remoteParticipants.forEach((participant) => {
+        participant.audioTrackPublications.forEach((pub) => {
+          if (pub.track) {
+            pub.track.stop();        // stops the MediaStreamTrack
+          }
+          if (pub.audioTrack) {
+            pub.audioTrack.detach(); // detaches from all audio elements
+          }
+        });
+      });
+
+      // 2. Mute local mic
+      if (room.localParticipant) {
+        await room.localParticipant.setMicrophoneEnabled(false);
+      }
+    }
 
     // ✅ Tell backend to stop STT/TTS
     try {
@@ -345,14 +387,12 @@ export default function VoiceLayout() {
       console.error("Failed to stop session:", err);
     }
 
-    // ✅ Disconnect LiveKit — stops mic stream to agent
+    // 3. Disconnect LiveKit — stops mic stream to agent
     if (room) {
       await room.disconnect();
       setRoom(null);
     }
 
-    setActive(false);
-    setConnectStatus('idle');
     endSession?.();
 
     // ✅ Redirect to summary
