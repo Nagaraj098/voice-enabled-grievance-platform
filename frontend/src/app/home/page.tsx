@@ -7,14 +7,14 @@ export default function Home() {
   const router = useRouter();
 
   return (
-    <div className="flex h-screen overflow-hidden font-sans bg-white dark:bg-[#000000] text-zinc-900 dark:text-zinc-100">
+    <div className="flex h-screen overflow-hidden font-sans bg-background text-foreground">
 
       <Sidebar activePage="home" />
 
-      <div className="flex-1 flex flex-col min-w-0 bg-zinc-50 dark:bg-[#0a0a0a]">
+      <div className="flex-1 flex flex-col min-w-0 bg-background">
         <Topbar />
 
-        <main className="flex-1 flex flex-col overflow-y-auto bg-white dark:bg-[#000000] rounded-tl-2xl border-l border-t border-zinc-200 dark:border-zinc-800/60 mt-2 ml-2">
+        <main className="flex-1 flex flex-col overflow-y-auto bg-background rounded-tl-2xl border-l border-t border-border mt-2 ml-2">
 
           {/* Hero area */}
           <div className="flex-1 flex flex-col items-center justify-center px-8 py-16">

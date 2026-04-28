@@ -132,7 +132,7 @@ export default function KnowledgeBase() {
   const [fileContent, setFileContent] = useState<any>(null);
   const [loadingContent, setLoadingContent] = useState(false);
   const [docToDelete, setDocToDelete] = useState<Doc | null>(null);
-  const [viewerTab, setViewerTab] = useState<"formatted" | "raw">("formatted");
+
 
   // Edit State
   const [editingFile, setEditingFile] = useState<Doc | null>(null);
@@ -155,6 +155,24 @@ export default function KnowledgeBase() {
 
   // Tab State
   const [activeTab, setActiveTab] = useState<'upload' | 'view'>('upload');
+  const [copied, setCopied] = useState(false);
+
+  const getRawContent = (filename: string = '', rawData: any) => {
+    if (typeof rawData === 'object') {
+      return JSON.stringify(rawData, null, 2);
+    }
+    const ext = filename.split('.').pop()?.toLowerCase();
+    
+    if (ext === 'json') {
+      try {
+        return JSON.stringify(JSON.parse(rawData), null, 2);
+      } catch {
+        return rawData;
+      }
+    }
+    
+    return String(rawData || '');
+  };
 
   const getFileType = (filename?: string) => {
     if (!filename) return 'unknown';
@@ -165,27 +183,6 @@ export default function KnowledgeBase() {
     if (ext === 'pdf') return 'pdf';
     if (['png','jpg','jpeg','webp','gif'].includes(ext)) return 'image';
     return 'unknown';
-  };
-
-  const highlightJson = (json: any) => {
-    if (typeof json !== 'string') {
-      json = JSON.stringify(json, null, 2);
-    }
-    return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, (match: string) => {
-      let cls = 'text-orange-400';
-      if (/^"/.test(match)) {
-        if (/:$/.test(match)) {
-          cls = 'text-blue-400';
-        } else {
-          cls = 'text-green-400';
-        }
-      } else if (/true|false/.test(match)) {
-        cls = 'text-red-400';
-      } else if (/null/.test(match)) {
-        cls = 'text-violet-400';
-      }
-      return `<span class="${cls}">${match}</span>`;
-    });
   };
 
   const showToast = (msg: string, type: "success" | "error") => {
@@ -376,8 +373,7 @@ export default function KnowledgeBase() {
     setSelectedFile(file);
     setLoadingContent(true);
     setFileContent(null);
-    setViewerTab("formatted");
-    
+
     // Check if it's a sample JSON logic locally available
     const localSample = SAMPLE_JSONS.find(s => s.filename === file.filename);
     if (localSample) {
@@ -483,124 +479,6 @@ export default function KnowledgeBase() {
     }
   };
 
-  const renderFileContent = (content: any) => {
-    if (!selectedFile) return null;
-    const fileType = getFileType(selectedFile.filename);
-    const fileUrl = `${API_BASE}/knowledge/${selectedFile.filename || selectedFile.id}`;
-
-    if (fileType === 'image') {
-      return <div className="h-full flex items-center justify-center p-4 bg-background rounded-xl"><img src={fileUrl} alt={selectedFile.name} className="max-w-full max-h-full rounded-lg shadow-lg border border-border" /></div>;
-    }
-    
-    if (fileType === 'pdf') {
-      return <iframe src={fileUrl} className="w-full h-full border-0 rounded-lg bg-zinc-200" title="PDF Preview" />;
-    }
-    
-    if (fileType === 'csv') {
-      if (!content || typeof content !== 'string') return <p className="text-muted-foreground">Invalid CSV content</p>;
-      const rows = content.split('\n').map(r => r.trim()).filter(Boolean);
-      return (
-        <div className="overflow-x-auto overflow-y-auto h-full w-full border border-border rounded-lg bg-background">
-          <table className="w-full text-left text-sm whitespace-nowrap text-foreground">
-            <thead>
-              {rows.length > 0 && (
-                <tr className="bg-card border-b border-border">
-                   {rows[0].split(',').map((cell, i) => (
-                     <th key={i} className="px-4 py-3 font-medium text-foreground">{cell}</th>
-                   ))}
-                </tr>
-              )}
-            </thead>
-            <tbody>
-               {rows.slice(1).map((row, i) => (
-                 <tr key={i} className={i % 2 === 0 ? "bg-background/40 hover:bg-card/60" : "bg-transparent hover:bg-card/60"}>
-                   {row.split(',').map((cell, j) => (
-                     <td key={j} className="px-4 py-2 border-b border-border/30 text-muted-foreground">{cell}</td>
-                   ))}
-                 </tr>
-               ))}
-            </tbody>
-          </table>
-        </div>
-      );
-    }
-    
-    if (fileType === 'text') {
-      return (
-        <div className="h-full w-full overflow-auto bg-background rounded-lg border border-border">
-          <pre className="text-foreground whitespace-pre-wrap font-mono text-sm leading-relaxed p-6">{String(content)}</pre>
-        </div>
-      );
-    }
-    
-    if (fileType === 'json') {
-      if (viewerTab === 'raw') {
-        const rawJson = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
-        return (
-          <div className="h-full w-full overflow-auto bg-muted rounded-xl border border-border">
-            <pre 
-              className="font-mono text-sm p-6 leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: highlightJson(rawJson) }}
-            />
-          </div>
-        );
-      } else {
-        let policies = content?.policies || content?.rules || [];
-        if (Array.isArray(content)) policies = content;
-
-        if (policies && policies.length > 0) {
-          return (
-            <div className="h-full w-full overflow-auto bg-background rounded-xl border border-border">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-muted sticky top-0 z-10 border-b border-border shadow-sm">
-                  <tr>
-                    <th className="px-4 py-3 text-xs font-semibold text-muted-foreground w-16">#</th>
-                    <th className="px-4 py-3 text-xs font-semibold text-muted-foreground w-[45%]">Rule / Policy</th>
-                    <th className="px-4 py-3 text-xs font-semibold text-muted-foreground">Details</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {policies.map((item: any, idx: number) => (
-                    <tr key={idx} className={idx % 2 === 0 ? "bg-background" : "bg-card"}>
-                      <td className="px-4 py-4 align-top">
-                        <span className="inline-flex items-center justify-center min-w-[24px] h-6 px-2 text-[11px] font-medium text-muted-foreground bg-muted border border-border rounded-full">
-                          {item.id || idx + 1}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 align-top text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                        {item.rule || item.title || item.name || "Untitled Rule"}
-                      </td>
-                      <td className="px-4 py-4 align-top text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                        {item.description || item.desc || item.details || "-"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          );
-        }
-
-        return (
-          <div className="text-center py-20 bg-muted/50 rounded-xl border border-dashed border-border flex flex-col items-center justify-center gap-2">
-            <p className="text-muted-foreground text-sm font-medium">No structured rules found.</p>
-            <p className="text-xs text-muted-foreground">Switch to "Raw JSON" tab to view content.</p>
-          </div>
-        );
-      }
-    }
-
-    return (
-      <div className="flex flex-col items-center justify-center h-full gap-3 border border-dashed border-border/60 rounded-xl bg-background/20">
-         <span className="text-muted-foreground"><Icons.File /></span>
-         <p className="text-muted-foreground font-sans font-medium">Preview not available for this file type.</p>
-         <button onClick={() => window.open(fileUrl, '_blank')} className="px-5 py-2 mt-2 bg-card hover:bg-card text-foreground rounded-lg text-sm flex gap-2 items-center transition-colors shadow-sm">
-           <Icons.Download /> Download File directly
-         </button>
-      </div>
-    );
-  };
-
   const handleAddUrl = () => {
     if (!urlInput.trim()) return;
     setDocs(prev => [...prev, {
@@ -634,6 +512,8 @@ export default function KnowledgeBase() {
     if (c.includes("electric")) return "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
     return "text-violet-400 bg-violet-500/10 border-violet-500/20";
   };
+
+  const rawContentStr = selectedFile && fileContent !== null ? getRawContent(selectedFile.filename || '', fileContent) : '';
 
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
@@ -1097,15 +977,14 @@ export default function KnowledgeBase() {
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <button 
                       onClick={() => {
-                        let text = "";
-                        if (typeof fileContent === "object") text = JSON.stringify(fileContent, null, 2);
-                        else text = String(fileContent || "");
-                        navigator.clipboard.writeText(text);
+                        navigator.clipboard.writeText(rawContentStr);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
                         showToast("Copied to clipboard", "success");
                       }}
                       className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-foreground bg-card hover:bg-muted border border-border transition-colors rounded-lg shadow-sm"
                     >
-                      <Icons.Copy /> <span className="hidden sm:inline">Copy</span>
+                      {copied ? <Icons.Check /> : <Icons.Copy />} <span className="hidden sm:inline">{copied ? "Copied" : "Copy"}</span>
                     </button>
                     <button 
                       onClick={() => {
@@ -1139,26 +1018,7 @@ export default function KnowledgeBase() {
                   </div>
                 </div>
                 
-                {getFileType(selectedFile.filename) === 'json' && (
-                  <div className="flex items-center bg-card px-6 pt-3 border-b border-border gap-6">
-                    <button 
-                      onClick={() => setViewerTab("formatted")}
-                      className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
-                        viewerTab === "formatted" ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      Formatted
-                    </button>
-                    <button 
-                      onClick={() => setViewerTab("raw")}
-                      className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
-                        viewerTab === "raw" ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      Raw JSON
-                    </button>
-                  </div>
-                )}
+
                 
                 <div className="p-6 overflow-hidden flex-1 bg-background flex flex-col min-h-0">
                   {loadingContent ? (
@@ -1166,9 +1026,20 @@ export default function KnowledgeBase() {
                       <span className="animate-spin inline-block text-muted-foreground"><Icons.Refresh /></span>
                       <p className="text-muted-foreground text-sm">Fetching document contents...</p>
                     </div>
-                  ) : fileContent || ['pdf', 'image'].includes(getFileType(selectedFile.filename)) ? (
-                    <div className="h-full w-full overflow-hidden flex flex-col">
-                      {renderFileContent(fileContent)}
+                  ) : fileContent !== null ? (
+                    <div className="relative flex-1 overflow-hidden rounded-lg border border-border">
+                      <div className="h-full overflow-auto bg-muted">
+                        <div className="flex min-w-max font-mono text-sm">
+                          <div className="select-none border-r border-border bg-muted px-3 py-4 text-right text-muted-foreground min-w-[48px] sticky left-0 flex-shrink-0">
+                            {rawContentStr.split('\n').map((_, i) => (
+                              <div key={i} className="leading-6">{i + 1}</div>
+                            ))}
+                          </div>
+                          <pre className="px-4 py-4 text-foreground leading-6 whitespace-pre">
+                            {rawContentStr}
+                          </pre>
+                        </div>
+                      </div>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center h-full gap-3 border border-dashed border-border rounded-xl bg-muted/30">

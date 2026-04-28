@@ -5,14 +5,14 @@ import Link from "next/link";
 
 export default function Sidebar({ activePage = "home" }: { activePage?: 'home' | 'call' | 'knowledge-base' | 'summary' | 'dashboard' | 'settings' }) {
   return (
-    <div className="w-60 bg-zinc-50 dark:bg-background border-r border-zinc-200 dark:border-border/60 p-4 flex flex-col h-full text-zinc-800 dark:text-foreground">
+    <div className="w-60 bg-background border-r border-border p-4 flex flex-col h-full text-foreground">
       
       {/* Logo */}
       <div className="flex items-center gap-2.5 mb-8 px-2">
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-          <span className="text-foreground font-bold text-sm">V</span>
+          <span className="text-white font-bold text-sm">V</span>
         </div>
-        <span className="font-semibold text-zinc-900 dark:text-foreground text-base tracking-tight">GRS</span>
+        <span className="font-semibold text-foreground text-base tracking-tight">GRS</span>
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-6 scrollbar-hide">
