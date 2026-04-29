@@ -133,9 +133,20 @@ function PreviewContent() {
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-hidden bg-background">
+      <div className={`flex-1 overflow-hidden ${fileType === "pdf" ? "bg-white" : "bg-background"}`}>
         {fileType === "pdf" ? (
-          <iframe src={fileUrl} className="w-full h-full border-none bg-muted/30" />
+          <object
+            data={fileUrl}
+            type="application/pdf"
+            className="w-full h-[calc(100vh-56px)]"
+            style={{ display: "block" }}
+          >
+            <embed
+              src={fileUrl}
+              type="application/pdf"
+              className="w-full h-[calc(100vh-56px)]"
+            />
+          </object>
         ) : fileType === "image" ? (
           <div className="w-full h-full overflow-auto flex items-center justify-center bg-muted/10 p-8">
             <img src={fileUrl} alt={fileName} className="max-w-full max-h-full object-contain shadow-lg border border-border rounded-lg bg-card" />

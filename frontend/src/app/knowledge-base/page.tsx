@@ -34,6 +34,8 @@ type Doc = {
   id: string;
   name: string;
   filename?: string;
+  url?: string;
+  file_url?: string;
   type: "url" | "file" | "json" | "db";
   size?: string | number;
   category?: string;
@@ -162,6 +164,10 @@ export default function KnowledgeBase() {
   // Edit Modal State
   const [editContent, setEditContent] = useState<string>('');
   const [editError, setEditError] = useState<string>('');
+  const [editSuccess, setEditSuccess] = useState<string>('');
+  const [replacementPdf, setReplacementPdf] = useState<File | null>(null);
+  const [uploadingReplacement, setUploadingReplacement] = useState(false);
+  const [replacementMessage, setReplacementMessage] = useState<string>('');
 
   const formatSize = (size?: string | number) => {
     if (size === undefined || size === null) return "—";
@@ -200,6 +206,46 @@ export default function KnowledgeBase() {
     if (ext === 'pdf') return 'pdf';
     if (['png','jpg','jpeg','webp','gif'].includes(ext)) return 'image';
     return 'unknown';
+  };
+
+  const getFileUrl = (file: Doc) => {
+    return file.url || file.file_url || `${API_BASE}/knowledge/${file.filename || file.id}`;
+  };
+
+  const getFileTypeMeta = (fileType: string) => {
+    if (fileType === "json") {
+      return {
+        label: "JSON",
+        badgeClass: "text-amber-400 bg-amber-500/10 border-amber-500/20",
+        icon: <Icons.Braces />
+      };
+    }
+    if (fileType === "pdf") {
+      return {
+        label: "PDF",
+        badgeClass: "text-red-400 bg-red-500/10 border-red-500/20",
+        icon: <Icons.FileText />
+      };
+    }
+    if (fileType === "text") {
+      return {
+        label: "TXT",
+        badgeClass: "text-blue-400 bg-blue-500/10 border-blue-500/20",
+        icon: <Icons.FileText />
+      };
+    }
+    if (fileType === "csv") {
+      return {
+        label: "CSV",
+        badgeClass: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+        icon: <Icons.Table />
+      };
+    }
+    return {
+      label: fileType.toUpperCase(),
+      badgeClass: "text-muted-foreground bg-muted border-border",
+      icon: <Icons.File />
+    };
   };
 
   const showToast = (msg: string, type: "success" | "error") => {
@@ -428,6 +474,105 @@ export default function KnowledgeBase() {
       rules: rulesData
     });
     setRawJsonText(typeof fullContent === 'object' ? JSON.stringify(fullContent, null, 2) : String(fullContent));
+  };
+
+  const openEditModal = async (file: Doc) => {
+    setEditingFile(file);
+    setEditError('');
+    setEditSuccess('');
+    setReplacementPdf(null);
+    setReplacementMessage('');
+    setEditContent('');
+    const type = getFileType(file.filename || file.name);
+    if (!["json", "text", "csv"].includes(type)) return;
+    try {
+      const res = await fetch(getFileUrl(file));
+      if (!res.ok) throw new Error("Failed to fetch file content");
+      const text = await res.text();
+      if (type === "json") {
+        setEditContent(JSON.stringify(JSON.parse(text), null, 2));
+      } else {
+        setEditContent(text);
+      }
+    } catch {
+      setEditError("Failed to fetch file content");
+    }
+  };
+
+  const handleEditContentChange = (value: string) => {
+    setEditContent(value);
+    if (!editingFile) return;
+    const type = getFileType(editingFile.filename || editingFile.name);
+    if (type === "json") {
+      try {
+        JSON.parse(value);
+        setEditError("");
+      } catch {
+        setEditError("Invalid JSON — check syntax");
+      }
+    } else {
+      setEditError("");
+    }
+  };
+
+  const handleSaveEditedFile = () => {
+    if (!editingFile) return;
+    const type = getFileType(editingFile.filename || editingFile.name);
+    if (type === "json" && editError) return;
+    setSavingEdit(true);
+    try {
+      const mimeType = type === "json" ? "application/json" : type === "csv" ? "text/csv" : "text/plain";
+      const blob = new Blob([editContent], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = editingFile.filename || editingFile.name;
+      a.click();
+      URL.revokeObjectURL(url);
+      setEditSuccess("Saved & downloaded ✓");
+      setTimeout(() => {
+        setSavingEdit(false);
+        setEditingFile(null);
+        setEditSuccess("");
+      }, 2000);
+    } catch {
+      setSavingEdit(false);
+      setEditError("Failed to save changes.");
+    }
+  };
+
+  const handlePdfReplacementUpload = async () => {
+    if (!editingFile || !replacementPdf) return;
+    setUploadingReplacement(true);
+    setReplacementMessage("");
+    try {
+      const formData = new FormData();
+      formData.append("file", replacementPdf);
+      const res = await fetch(`/api/files/${editingFile.id}`, {
+        method: "PUT",
+        body: formData
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      setReplacementMessage("File replaced ✓");
+      await fetchDocs();
+      setTimeout(() => {
+        setEditingFile(null);
+        setReplacementMessage("");
+      }, 800);
+    } catch {
+      setReplacementMessage("Upload failed. Try again.");
+    } finally {
+      setUploadingReplacement(false);
+    }
+  };
+
+  const handleDownloadOriginalPdf = () => {
+    if (!editingFile) return;
+    const a = document.createElement("a");
+    a.href = getFileUrl(editingFile);
+    a.download = editingFile.filename || editingFile.name;
+    a.target = "_blank";
+    a.click();
   };
 
   const handleRuleChange = (index: number, field: string, value: string) => {
@@ -1141,20 +1286,9 @@ export default function KnowledgeBase() {
                             <Icons.Eye />
                           </button>
                           <button
-                            onClick={async (e) => {
+                            onClick={(e) => {
                               e.stopPropagation();
-                              setEditingFile(file);
-                              setEditError('');
-                              setEditContent('');
-                              if (["pdf", "image", "unknown"].includes(type)) return;
-                              try {
-                                const res = await fetch(`${API_BASE}/knowledge/${file.filename || file.id}`);
-                                const text = await res.text();
-                                if (type === 'json') {
-                                  try { setEditContent(JSON.stringify(JSON.parse(text), null, 2)); }
-                                  catch { setEditContent(text); }
-                                } else { setEditContent(text); }
-                              } catch (err) { setEditError('Failed to fetch file content'); }
+                              openEditModal(file);
                             }}
                             className="p-2 text-muted-foreground hover:text-amber-400 hover:bg-amber-500/10 rounded-md transition-colors"
                             title="Edit"
@@ -1192,85 +1326,115 @@ export default function KnowledgeBase() {
 
           {/* Edit File Modal */}
           {editingFile && (
-            <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+            <div className="fixed inset-0 bg-background/70 z-50 flex items-center justify-center p-4">
               <div className="bg-card border border-border rounded-xl p-6 w-[560px] max-h-[80vh] flex flex-col gap-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-foreground">Edit File — {editingFile.filename || editingFile.name}</h2>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="p-2 rounded-lg bg-muted border border-border text-muted-foreground flex-shrink-0">
+                      {getFileTypeMeta(getFileType(editingFile.filename || editingFile.name)).icon}
+                    </div>
+                    <div className="min-w-0">
+                      <h2 className="text-lg font-semibold text-foreground truncate">{editingFile.filename || editingFile.name}</h2>
+                      <span className={`inline-flex mt-1 px-2 py-0.5 rounded-full border text-[10px] font-medium tracking-wider ${getFileTypeMeta(getFileType(editingFile.filename || editingFile.name)).badgeClass}`}>
+                        {getFileTypeMeta(getFileType(editingFile.filename || editingFile.name)).label}
+                      </span>
+                    </div>
+                  </div>
                   <button onClick={() => setEditingFile(null)} className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full transition-colors">
                     <Icons.X />
                   </button>
                 </div>
                 
-                {["pdf", "image", "unknown"].includes(getFileType(editingFile.filename)) ? (
-                  <div className="flex-1 flex flex-col items-center justify-center py-12 text-center">
-                    <div className="p-4 bg-muted/30 rounded-full mb-4">
-                      <Icons.FileText />
+                {getFileType(editingFile.filename || editingFile.name) === "pdf" ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="bg-background border border-border rounded-xl p-4 flex flex-col gap-3">
+                      <p className="text-sm font-semibold text-foreground">📤 Replace PDF</p>
+                      <p className="text-xs text-muted-foreground">Upload a new PDF to replace this file.</p>
+                      <input
+                        id="replace-pdf-input"
+                        type="file"
+                        accept=".pdf"
+                        className="hidden"
+                        onChange={(e) => {
+                          const selected = e.target.files?.[0] || null;
+                          setReplacementPdf(selected);
+                          setReplacementMessage("");
+                        }}
+                      />
+                      <button
+                        onClick={() => document.getElementById("replace-pdf-input")?.click()}
+                        className="px-4 py-2 bg-muted text-foreground rounded-lg text-sm font-medium border border-border hover:bg-background transition-colors"
+                      >
+                        Choose File
+                      </button>
+                      {replacementPdf && (
+                        <p className="text-xs text-muted-foreground">
+                          {replacementPdf.name} ({formatSize(replacementPdf.size)})
+                        </p>
+                      )}
+                      <button
+                        onClick={handlePdfReplacementUpload}
+                        disabled={!replacementPdf || uploadingReplacement}
+                        className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                      >
+                        {uploadingReplacement && <span className="animate-spin inline-block"><Icons.Refresh /></span>}
+                        {uploadingReplacement ? "Uploading..." : "Upload Replacement"}
+                      </button>
                     </div>
-                    <p className="text-sm font-medium text-foreground mb-1">Editing not supported</p>
-                    <p className="text-xs text-muted-foreground mb-6">PDF and image files cannot be edited directly.</p>
-                    <button onClick={() => setEditingFile(null)} className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:opacity-90 transition-opacity">
-                      Re-upload
-                    </button>
+                    <div className="bg-background border border-border rounded-xl p-4 flex flex-col gap-3">
+                      <p className="text-sm font-semibold text-foreground">🔗 Edit Externally</p>
+                      <p className="text-xs text-muted-foreground">Download, edit in your PDF editor, then re-upload.</p>
+                      <button
+                        onClick={handleDownloadOriginalPdf}
+                        className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Icons.Download />
+                        Download PDF
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <>
                     <div className="flex-1 relative">
                       <textarea
                         value={editContent}
-                        onChange={(e) => setEditContent(e.target.value)}
-                        className={`font-mono text-sm bg-muted border rounded-lg p-3 w-full h-[400px] resize-none text-foreground focus:outline-none focus:ring-1 focus:ring-primary ${editError ? 'border-red-500' : 'border-border'}`}
+                        onChange={(e) => handleEditContentChange(e.target.value)}
+                        className={`font-mono text-sm bg-muted border rounded-lg p-3 w-full h-[400px] resize-none text-foreground focus:outline-none focus:ring-2 focus:ring-primary ${editError ? 'border-red-500' : 'border-border'}`}
                         placeholder="Loading content..."
                       />
                       {editError && (
-                        <div className="absolute bottom-3 left-3 right-3 text-xs text-red-500 bg-red-500/10 px-3 py-2 rounded border border-red-500/20">
+                        <div className="mt-2 text-xs text-red-500">
                           {editError}
+                        </div>
+                      )}
+                      {editSuccess && (
+                        <div className="mt-2 text-xs text-emerald-400">
+                          {editSuccess}
                         </div>
                       )}
                     </div>
                     <div className="flex justify-end gap-3 mt-2">
                       <button 
                         onClick={() => setEditingFile(null)}
-                        className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground text-sm font-medium rounded-lg transition-colors"
+                        className="bg-muted text-foreground px-4 py-2 rounded-lg hover:bg-background transition-colors"
                       >
                         Cancel
                       </button>
                       <button 
-                        onClick={async () => {
-                          const type = getFileType(editingFile.filename);
-                          if (type === 'json') {
-                            try {
-                              JSON.parse(editContent);
-                              setEditError('');
-                            } catch (e: any) {
-                              setEditError(`Invalid JSON: ${e.message}`);
-                              return;
-                            }
-                          }
-                          setSavingEdit(true);
-                          try {
-                            const res = await fetch(`${API_BASE}/knowledge/${editingFile.id || editingFile.filename}`, {
-                              method: 'PUT',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ content: editContent })
-                            });
-                            if (!res.ok) throw new Error('Failed to save');
-                            showToast("File updated successfully", "success");
-                            setEditingFile(null);
-                            fetchDocs();
-                          } catch (err) {
-                            setEditError("Failed to save changes.");
-                          } finally {
-                            setSavingEdit(false);
-                          }
-                        }}
-                        disabled={savingEdit}
-                        className="px-4 py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+                        onClick={handleSaveEditedFile}
+                        disabled={savingEdit || !!editError}
+                        className={`bg-primary text-primary-foreground px-4 py-2 rounded-lg disabled:opacity-50 transition-colors flex items-center gap-2 border ${editError ? "border-red-500" : "border-primary"}`}
                       >
                         {savingEdit && <span className="animate-spin inline-block"><Icons.Refresh /></span>}
-                        Save Changes
+                        {savingEdit ? "Saving..." : "Save Changes"}
                       </button>
                     </div>
                   </>
+                )}
+                {replacementMessage && (
+                  <p className={`text-xs ${replacementMessage.includes("failed") ? "text-red-500" : "text-emerald-400"}`}>
+                    {replacementMessage}
+                  </p>
                 )}
               </div>
             </div>
