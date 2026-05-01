@@ -3,7 +3,7 @@ import wave
 import io
 import numpy as np
 
-COLAB_WHISPER_URL = "https://honey-park-ahead-identifying.trycloudflare.com/transcribe"
+COLAB_WHISPER_URL = "https://high-shopper-deluxe-competition.trycloudflare.com/transcribe"
 
 class STTService:
     def __init__(self, url: str = COLAB_WHISPER_URL):

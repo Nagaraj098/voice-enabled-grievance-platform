@@ -1,0 +1,23 @@
+{
+  "issue_category": "Other",
+  "severity": "low",
+  "description": "I want to register a complaint about a general issue.",
+  "resolution_status": "Registered",
+  "user_name": "Nagraj",
+  "session_id": "a9a76739-b836-4eea-9825-a224e4d2ef0f",
+  "messages": [
+    {
+      "role": "agent",
+      "text": "Hello! Welcome to the Grievance Registration System. I am here to help you register your complaint today. May I know your full name please?"
+    },
+    {
+      "role": "user",
+      "text": "My name is Nagraj"
+    },
+    {
+      "role": "agent",
+      "text": "Thank you, Nagraj! Could you tell me which category your issue falls under? Is it Water Supply, Electricity, Road, Sanitation, Network, or something else?"
+    }
+  ],
+  "duration": "42s"
+}
