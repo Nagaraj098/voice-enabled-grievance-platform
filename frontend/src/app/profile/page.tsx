@@ -379,32 +379,6 @@ export default function ProfilePage() {
                       )}
                     </div>
 
-                    {/* TFA */}
-                    <div className="py-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-muted rounded-lg text-muted-foreground"><Icons.Shield /></div>
-                          <div>
-                            <p className="text-sm font-medium text-foreground">Two-Factor Authentication</p>
-                            <p className="text-xs text-muted-foreground">Add an extra layer of security to your account</p>
-                          </div>
-                        </div>
-                        <button 
-                          onClick={handle2FAToggle}
-                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${tfaEnabled ? 'bg-primary' : 'bg-muted border border-border'}`}
-                        >
-                          <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-primary-foreground transition-transform ${tfaEnabled ? 'translate-x-4' : 'translate-x-1 bg-muted-foreground'}`} />
-                        </button>
-                      </div>
-                      {tfaEnabled && tfaSecret && (
-                        <div className="mt-4 p-4 bg-background border border-border rounded-lg text-sm text-foreground">
-                          <p className="mb-2 font-medium">Your 2FA Secret Key:</p>
-                          <code className="bg-muted px-2 py-1 rounded text-primary">{tfaSecret}</code>
-                          <p className="mt-2 text-xs text-muted-foreground">Store this safely. In a real app, this would be a QR code.</p>
-                        </div>
-                      )}
-                    </div>
-
                     {/* Active Sessions */}
                     <div className="py-4 pb-0 flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -452,36 +426,7 @@ export default function ProfilePage() {
 
                   <div className="mb-6 max-w-xs">
                     <label className="block text-sm font-medium text-foreground mb-2">Language</label>
-                    <select className="bg-background border border-border rounded-lg px-3 py-2 text-foreground text-sm w-full focus:outline-none focus:ring-2 focus:ring-primary appearance-none">
-                      <option value="en">English</option>
-                      <option value="es">Spanish</option>
-                      <option value="fr">French</option>
-                      <option value="de">German</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-3">Notifications</label>
-                    <div className="space-y-3 max-w-sm">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Email Notifications</span>
-                        <button onClick={handleToggleEmail} className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${emailNotif ? 'bg-primary' : 'bg-muted border border-border'}`}>
-                          <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-primary-foreground transition-transform ${emailNotif ? 'translate-x-4' : 'translate-x-1 bg-muted-foreground'}`} />
-                        </button>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Call Alerts</span>
-                        <button onClick={handleToggleCall} className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${callAlerts ? 'bg-primary' : 'bg-muted border border-border'}`}>
-                          <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-primary-foreground transition-transform ${callAlerts ? 'translate-x-4' : 'translate-x-1 bg-muted-foreground'}`} />
-                        </button>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Weekly Summary</span>
-                        <button onClick={handleToggleWeekly} className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${weeklySummary ? 'bg-primary' : 'bg-muted border border-border'}`}>
-                          <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-primary-foreground transition-transform ${weeklySummary ? 'translate-x-4' : 'translate-x-1 bg-muted-foreground'}`} />
-                        </button>
-                      </div>
-                    </div>
+                    <p className="text-sm text-muted-foreground">English</p>
                   </div>
                 </div>
 

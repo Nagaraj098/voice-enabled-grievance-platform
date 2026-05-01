@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
 import Topbar from "@/components/layout/Topbar";
 
@@ -120,6 +121,7 @@ const SAMPLE_JSONS = [
 ];
 
 export default function KnowledgeBase() {
+  const router = useRouter();
   const [docs, setDocs] = useState<Doc[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
@@ -156,10 +158,6 @@ export default function KnowledgeBase() {
   // Tab State
   const [activeTab, setActiveTab] = useState<string>('add-url');
   const [copied, setCopied] = useState(false);
-
-  // File Browser State
-  const [showFileBrowser, setShowFileBrowser] = useState(false);
-  const [activeFileCategory, setActiveFileCategory] = useState("All");
 
   // Edit Modal State
   const [editContent, setEditContent] = useState<string>('');
@@ -715,7 +713,7 @@ export default function KnowledgeBase() {
                 {docs.length} documents
               </div>
               <button
-                onClick={() => setShowFileBrowser(true)}
+                onClick={() => router.push("/knowledge-base/files")}
                 className="bg-card border border-border text-foreground hover:bg-muted px-4 py-1.5 rounded-lg text-sm flex items-center gap-2 ml-2 transition-colors"
               >
                 <Icons.FolderOpen />
@@ -1113,7 +1111,7 @@ export default function KnowledgeBase() {
                                     <button onClick={() => handleViewFile(doc)} className="p-1.5 text-muted-foreground hover:text-blue-400 hover:bg-blue-500/10 rounded-md transition-colors" title="View">
                                       <Icons.Eye />
                                     </button>
-                                    <button onClick={() => handleEditFile(doc)} className="p-1.5 text-muted-foreground hover:text-amber-400 hover:bg-amber-500/10 rounded-md transition-colors" title="Edit">
+                                    <button onClick={() => openEditModal(doc)} className="p-1.5 text-muted-foreground hover:text-amber-400 hover:bg-amber-500/10 rounded-md transition-colors" title="Edit">
                                       <Icons.Edit />
                                     </button>
                                     <button onClick={() => {
@@ -1195,134 +1193,6 @@ export default function KnowledgeBase() {
             className="hidden"
             onChange={e => handleFiles(e.target.files)}
           />
-
-          {/* File Browser Drawer */}
-          {showFileBrowser && (
-            <>
-              <div className="fixed inset-0 bg-background/50 backdrop-blur-sm z-40" onClick={() => setShowFileBrowser(false)} />
-              <div className="fixed inset-y-0 right-0 w-[480px] bg-background border-l border-border z-50 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
-                <div className="flex items-center justify-between p-6 border-b border-border">
-                  <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                    <Icons.FolderOpen />
-                    Uploaded Files
-                  </h2>
-                  <button onClick={() => setShowFileBrowser(false)} className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full transition-colors">
-                    <Icons.X />
-                  </button>
-                </div>
-                
-                <div className="flex items-center gap-4 px-6 border-b border-border overflow-x-auto no-scrollbar">
-                  {["All", "PDF", "JSON", "TXT", "CSV", "Other"].map(cat => {
-                    let count = docs.length;
-                    if (cat !== "All") {
-                      count = docs.filter(d => {
-                        const type = getFileType(d.filename);
-                        if (cat === "Other") return !["pdf", "json", "text", "csv"].includes(type);
-                        if (cat === "TXT") return type === "text";
-                        return type === cat.toLowerCase();
-                      }).length;
-                    }
-                    return (
-                      <button
-                        key={cat}
-                        onClick={() => setActiveFileCategory(cat)}
-                        className={`py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${
-                          activeFileCategory === cat 
-                            ? 'text-foreground border-primary' 
-                            : 'text-muted-foreground border-transparent hover:text-foreground'
-                        }`}
-                      >
-                        {cat} <span className="text-xs opacity-60 ml-1">({count})</span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="flex-1 overflow-y-auto">
-                  {docs.filter(d => {
-                    if (activeFileCategory === "All") return true;
-                    const type = getFileType(d.filename);
-                    if (activeFileCategory === "Other") return !["pdf", "json", "text", "csv"].includes(type);
-                    if (activeFileCategory === "TXT") return type === "text";
-                    return type === activeFileCategory.toLowerCase();
-                  }).map((file) => {
-                    const type = getFileType(file.filename);
-                    let IconComp = Icons.File;
-                    let iconColor = "text-muted-foreground";
-                    if (type === "pdf") { IconComp = Icons.FileText; iconColor = "text-red-400"; }
-                    else if (type === "json") { IconComp = Icons.Braces; iconColor = "text-amber-400"; }
-                    else if (type === "text") { IconComp = Icons.FileText; iconColor = "text-blue-400"; }
-                    else if (type === "csv") { IconComp = Icons.Table; iconColor = "text-emerald-400"; }
-                    
-                    return (
-                      <div key={file.id} className="flex items-center justify-between px-6 py-4 border-b border-border hover:bg-muted/50 cursor-pointer transition-colors group">
-                        <div className="flex items-center gap-4 min-w-0 flex-1">
-                          <div className={`p-2 rounded-lg bg-card border border-border flex-shrink-0 ${iconColor}`}>
-                            <IconComp />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                              <p className="text-sm font-bold text-foreground truncate">{file.filename || file.name}</p>
-                              <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[10px] font-medium uppercase tracking-wider flex-shrink-0">
-                                {type === 'text' ? 'TXT' : type === 'image' ? 'IMG' : type}
-                              </span>
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {formatSize(file.size)} • {file.created_at || file.uploadedAt ? new Date(file.created_at || file.uploadedAt || file.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : new Date(file.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-4 flex-shrink-0">
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const fileUrl = `${API_BASE}/knowledge/${file.filename || file.id}`;
-                              const formattedDate = file.created_at || file.uploadedAt ? new Date(file.created_at || file.uploadedAt || file.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : new Date(file.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                              window.open(`/knowledge-base/preview?file=${encodeURIComponent(fileUrl)}&name=${encodeURIComponent(file.filename || file.name)}&type=${type}&size=${encodeURIComponent(formatSize(file.size))}&date=${encodeURIComponent(formattedDate)}`, '_blank');
-                            }}
-                            className="p-2 text-muted-foreground hover:text-blue-400 hover:bg-blue-500/10 rounded-md transition-colors"
-                            title="Preview"
-                          >
-                            <Icons.Eye />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openEditModal(file);
-                            }}
-                            className="p-2 text-muted-foreground hover:text-amber-400 hover:bg-amber-500/10 rounded-md transition-colors"
-                            title="Edit"
-                          >
-                            <Icons.Edit />
-                          </button>
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const a = document.createElement("a");
-                              a.href = `${API_BASE}/knowledge/${file.filename || file.id}`;
-                              a.download = file.filename || file.name;
-                              a.target = "_blank";
-                              a.click();
-                            }}
-                            className="p-2 text-muted-foreground hover:text-emerald-400 hover:bg-emerald-500/10 rounded-md transition-colors"
-                            title="Download"
-                          >
-                            <Icons.Download />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  
-                  {docs.length === 0 && (
-                    <div className="p-8 text-center text-muted-foreground text-sm">
-                      No files found for this category.
-                    </div>
-                  )}
-                </div>
-              </div>
-            </>
-          )}
 
           {/* Edit File Modal */}
           {editingFile && (
