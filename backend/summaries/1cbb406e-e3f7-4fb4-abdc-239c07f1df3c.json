@@ -1,0 +1,31 @@
+{
+  "issue_category": "Water Supply",
+  "severity": "high",
+  "description": "Nagraj is facing a water issue",
+  "resolution_status": "Registered",
+  "user_name": "Nagraj",
+  "session_id": "1cbb406e-e3f7-4fb4-abdc-239c07f1df3c",
+  "messages": [
+    {
+      "role": "agent",
+      "text": "Hello! Welcome to the Grievance Registration System. I am here to help you register your complaint today. May I know your full name please?"
+    },
+    {
+      "role": "user",
+      "text": "My name is Nagraj"
+    },
+    {
+      "role": "agent",
+      "text": "Thank you, Nagraj! Could you tell me which category your issue falls under?\nIs it Water Supply, Electricity, Road, Sanitation, Network, or something else?"
+    },
+    {
+      "role": "user",
+      "text": "I am facing water issue."
+    },
+    {
+      "role": "agent",
+      "text": "Nagraj, I'm so sorry to hear that you're facing a water issue. That must be frustrating.\n\nCould you please describe what exactly is happening with your water issue? Is it related to the quality of the water, the billing, or something else entirely?"
+    }
+  ],
+  "duration": "55s"
+}

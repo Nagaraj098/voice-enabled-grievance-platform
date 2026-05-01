@@ -1,0 +1,39 @@
+{
+  "issue_category": "Other",
+  "severity": "medium",
+  "description": "Grievance registered via voice call.",
+  "resolution_status": "Registered",
+  "user_name": "Navraj",
+  "session_id": "925ccee1-9daf-44ca-918c-bb5927f4a0b9",
+  "messages": [
+    {
+      "role": "agent",
+      "text": "Hello! Welcome to the Grievance Registration System. I am here to help you register your complaint today. May I know your full name please?"
+    },
+    {
+      "role": "user",
+      "text": "My name is Navraj"
+    },
+    {
+      "role": "agent",
+      "text": "Thank you, Navraj! Could you tell me which category your issue falls under?\nIs it Water Supply, Electricity, Road, Sanitation, Network, or something else?"
+    },
+    {
+      "role": "user",
+      "text": "I don't know what all this is."
+    },
+    {
+      "role": "agent",
+      "text": "Don't worry, Navraj! I'm here to help you with that. Let me explain. We help with issues related to public services. If you're facing a problem, it's likely to fall under one of these categories. Here's a brief explanation:\n\n* Water Supply: Issues with water supply, leaks, or poor water quality\n* Electricity: Issues with electricity supply, power cuts, or billing\n* Road: Issues with road maintenance, potholes, or garbage not being collected\n* Sanitation: Issues with garbage collection, dumping, or cleanliness\n* Network: Issues with internet, phone, or cable services\n* Other: Any other issue not listed above\n\nCan you think of a specific problem you're facing that's"
+    },
+    {
+      "role": "user",
+      "text": "My name is Nagraj"
+    },
+    {
+      "role": "agent",
+      "text": "I apologize for the mistake earlier, Nagraj! I've taken note of your correct name.\n\nLet's focus on your issue now. Since you mentioned earlier that you're not sure what category your issue falls under, can you please tell me what exactly is the problem you're facing, Nagraj?"
+    }
+  ],
+  "duration": "1m 10s"
+}
