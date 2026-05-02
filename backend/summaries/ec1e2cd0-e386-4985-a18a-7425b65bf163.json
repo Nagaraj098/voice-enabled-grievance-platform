@@ -1,0 +1,39 @@
+{
+  "issue_category": "Other",
+  "severity": "high",
+  "description": "A factory near my house in Delhi is emitting a lot of smoke, causing noise pollution and public nuisance.",
+  "resolution_status": "Registered",
+  "user_name": "An Asmrtist.",
+  "session_id": "ec1e2cd0-e386-4985-a18a-7425b65bf163",
+  "messages": [
+    {
+      "role": "agent",
+      "text": "Hello! Welcome to the Grievance Registration System. I am here to help you register your complaint today. May I know your full name please?"
+    },
+    {
+      "role": "user",
+      "text": "I'm an ASMRtist."
+    },
+    {
+      "role": "agent",
+      "text": "Nice to meet you, An AsmrTist! Thank you for reaching out to us. Could you tell me which category your issue falls under?\n\nIs it Water Supply, Electricity, Road, Sanitation, Network, or something else?"
+    },
+    {
+      "role": "user",
+      "text": "So, I am in Delhi. A factory near my house is emitting a lot of smoke in Delhi."
+    },
+    {
+      "role": "agent",
+      "text": "An AsmrTist, thank you for reaching out about this serious issue. In this case, I'd like to categorize your issue under Police and Safety, specifically as a noise pollution or public nuisance issue.\n\nYou can report this to the local police station or dial 100 for immediate assistance. They will act upon your complaint within 4 hours. Additionally, if the factory is a repeat offender, they might be booked under the Indian Penal Code (IPC) for violating noise pollution regulations.\n\nIs there anything else you'd like to report or is there any other action you'd like me to take on this issue?"
+    },
+    {
+      "role": "user",
+      "text": "Which number can I contact?"
+    },
+    {
+      "role": "agent",
+      "text": "An AsmrTist, you can contact the police by dialing 100 for immediate assistance."
+    }
+  ],
+  "duration": "1m 28s"
+}
