@@ -58,8 +58,11 @@
 # stt    = STTService()
 # tts    = TTSService()
 
-# # Track active TTS tasks per session so we can cancel them instantly on disconnect
+# # Track active TTS tasks per session so we can cancel them instantly
 # active_tts_tasks: dict[str, asyncio.Task] = {}
+
+# # ✅ NEW: per-session TTS interrupt events (set when user speaks, cancels current TTS)
+# tts_interrupt_events: dict[str, asyncio.Event] = {}
 
 
 # def broadcast(data: dict):
@@ -122,23 +125,32 @@
 # ):
 #     """
 #     Cancellable TTS helper.
-#     - Stored as asyncio.Task so it can be cancelled instantly on disconnect
-#     - Checks stop_event BEFORE and AFTER generation
-#     - Never broadcasts audio if call has ended
+#     - Checks stop_event (call ended) AND tts_interrupt_events (user spoke)
+#     - Stored as asyncio.Task so it can be cancelled instantly
 #     """
 
-#     # Check 1: before starting TTS
+#     # Check 1: call already ended
 #     if stop_event.is_set():
 #         print(f"🛑 [{label}] Skipping TTS — call already ended")
 #         return
+
+#     # ✅ Reset the interrupt event before starting new TTS
+#     interrupt_event = tts_interrupt_events.get(session_id)
+#     if interrupt_event:
+#         interrupt_event.clear()
 
 #     async def _run():
 #         try:
 #             audio_b64 = await tts.synthesize_async(text)
 
-#             # Check 2: after TTS finishes (call may have ended during await)
+#             # Check 2: call ended during TTS generation
 #             if stop_event.is_set():
 #                 print(f"🛑 [{label}] Call ended during TTS — not broadcasting")
+#                 return
+
+#             # ✅ Check 3: user spoke during TTS generation — discard this audio
+#             if interrupt_event and interrupt_event.is_set():
+#                 print(f"🛑 [{label}] User spoke during TTS generation — discarding audio")
 #                 return
 
 #             if audio_b64:
@@ -253,6 +265,11 @@
 
 # async def process_audio(track, session_id: str, stop_event: asyncio.Event):
 #     print("🎧 Processing audio stream...")
+
+#     # ✅ Create a per-session interrupt event for this call
+#     interrupt_event = asyncio.Event()
+#     tts_interrupt_events[session_id] = interrupt_event
+
 #     audio_stream = rtc.AudioStream(track)
 
 #     async for frame in audio_stream:
@@ -284,6 +301,18 @@
 #                     break
 
 #                 print(f"🗣 User: {text}")
+
+#                 # ✅ STEP 2: User spoke — interrupt any running TTS immediately
+#                 interrupt_event.set()
+
+#                 # ✅ Cancel the active TTS task if it's still running
+#                 task = active_tts_tasks.get(session_id)
+#                 if task and not task.done():
+#                     task.cancel()
+#                     print(f"🛑 TTS interrupted by new user speech")
+
+#                 # ✅ Tell frontend to stop playing current audio right now
+#                 broadcast({"type": "stop_audio"})
 
 #                 session = store.get_session(session_id)
 #                 if not session:
@@ -328,7 +357,7 @@
 #                 session.add_message("assistant", ai_response)
 #                 broadcast({"type": "ai_response", "text": ai_response})
 
-#                 # STEP 4: TTS — cancellable
+#                 # STEP 4: TTS — cancellable, interrupt_event is reset inside
 #                 await safe_tts_and_broadcast(
 #                     ai_response, stop_event, session_id,
 #                     label=f"stage:{session.stage.value}"
@@ -338,6 +367,9 @@
 #             print("❌ Audio Processing Error:", e)
 #             import traceback
 #             traceback.print_exc()
+
+#     # ✅ Clean up interrupt event when audio processing ends
+#     tts_interrupt_events.pop(session_id, None)
 
 
 # async def main():
@@ -421,7 +453,6 @@
 # if __name__ == "__main__":
 #     asyncio.run(start())
 
-
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -431,6 +462,7 @@ import numpy as np
 import requests
 import json
 import time
+import edge_tts
 
 from livekit import rtc
 from livekit.api import AccessToken, VideoGrants
@@ -439,7 +471,6 @@ from agent.audio_buffer import AudioBuffer
 from agent.state_machine import Stage, get_next_stage
 from services.stt_service import STTService
 from services.llm_service import generate_response
-from services.tts_service import TTSService
 from sessions.session_store import store
 from dotenv import load_dotenv
 
@@ -456,6 +487,8 @@ WHISPER_SAMPLE_RATE = 16000
 FASTAPI_URL         = "http://localhost:8000"
 SUMMARIES_DIR       = os.path.join(os.path.dirname(os.path.dirname(__file__)), "summaries")
 os.makedirs(SUMMARIES_DIR, exist_ok=True)
+
+TTS_VOICE = "en-IN-NeerjaNeural"   # Change to any edge-tts voice you prefer
 
 JUNK_PHRASES = [
     "thanks for watching", "thank you for watching",
@@ -480,20 +513,36 @@ GREETING_MESSAGE = (
 
 buffer = AudioBuffer()
 stt    = STTService()
-tts    = TTSService()
 
 # Track active TTS tasks per session so we can cancel them instantly
 active_tts_tasks: dict[str, asyncio.Task] = {}
 
-# ✅ NEW: per-session TTS interrupt events (set when user speaks, cancels current TTS)
+# Per-session TTS interrupt events (set when user speaks, cancels current TTS)
 tts_interrupt_events: dict[str, asyncio.Event] = {}
 
 
 def broadcast(data: dict):
+    """Send JSON control messages via HTTP → ConnectionManager → WebSocket."""
     try:
         requests.post(f"{FASTAPI_URL}/internal/broadcast", json=data, timeout=5)
     except Exception as e:
         print(f"❌ Broadcast error: {e}")
+
+
+def broadcast_audio_chunk(chunk: bytes):
+    """
+    Send a raw MP3 binary chunk directly over WebSocket.
+    Uses the /internal/broadcast_binary endpoint (see main.py update).
+    """
+    try:
+        requests.post(
+            f"{FASTAPI_URL}/internal/broadcast_binary",
+            data=chunk,
+            headers={"Content-Type": "application/octet-stream"},
+            timeout=5,
+        )
+    except Exception as e:
+        print(f"❌ Binary broadcast error: {e}")
 
 
 def resample(pcm: np.ndarray, orig_sr: int, target_sr: int) -> np.ndarray:
@@ -541,59 +590,86 @@ def extract_category(text: str) -> str:
     return "Other"
 
 
-async def safe_tts_and_broadcast(
+async def stream_tts_websocket(
     text: str,
     stop_event: asyncio.Event,
     session_id: str,
     label: str = ""
 ):
     """
-    Cancellable TTS helper.
-    - Checks stop_event (call ended) AND tts_interrupt_events (user spoke)
-    - Stored as asyncio.Task so it can be cancelled instantly
+    Stream MP3 audio bytes from edge-tts directly over WebSocket in real-time.
+    
+    Flow:
+      edge-tts yields MP3 chunks
+        → each chunk sent immediately as binary WebSocket frame
+        → frontend MediaSource API plays bytes as they arrive
+    
+    Audio starts playing on frontend within ~200ms (first chunk),
+    instead of waiting for full audio generation.
     """
 
-    # Check 1: call already ended
     if stop_event.is_set():
         print(f"🛑 [{label}] Skipping TTS — call already ended")
         return
 
-    # ✅ Reset the interrupt event before starting new TTS
+    # Reset interrupt event before starting new TTS
     interrupt_event = tts_interrupt_events.get(session_id)
     if interrupt_event:
         interrupt_event.clear()
 
-    async def _run():
+    async def _stream():
         try:
-            audio_b64 = await tts.synthesize_async(text)
+            print(f"🔊 [{label}] Starting WebSocket TTS stream...")
 
-            # Check 2: call ended during TTS generation
-            if stop_event.is_set():
-                print(f"🛑 [{label}] Call ended during TTS — not broadcasting")
-                return
+            # Signal frontend: new audio stream is starting
+            # Frontend should open MediaSource and prepare to receive chunks
+            broadcast({"type": "audio_stream_start"})
 
-            # ✅ Check 3: user spoke during TTS generation — discard this audio
-            if interrupt_event and interrupt_event.is_set():
-                print(f"🛑 [{label}] User spoke during TTS generation — discarding audio")
-                return
+            communicate = edge_tts.Communicate(text, TTS_VOICE)
+            chunk_count = 0
 
-            if audio_b64:
-                broadcast({"type": "agent_audio", "audio": audio_b64})
-                print(f"✅ Audio sent [{label}]")
+            async for chunk in communicate.stream():
+                # Check for cancellation between every chunk
+                if stop_event.is_set():
+                    print(f"🛑 [{label}] Call ended mid-stream — stopping")
+                    break
+
+                if interrupt_event and interrupt_event.is_set():
+                    print(f"🛑 [{label}] User spoke mid-stream — stopping")
+                    break
+
+                if chunk["type"] == "audio":
+                    audio_data = chunk["data"]
+                    # Send raw MP3 bytes as binary WebSocket frame
+                    broadcast_audio_chunk(audio_data)
+                    chunk_count += 1
+
+                    if chunk_count == 1:
+                        print(f"  ⚡ [{label}] First chunk sent — frontend starts playing now")
+
+            # Signal frontend: stream is complete
+            if not stop_event.is_set() and not (interrupt_event and interrupt_event.is_set()):
+                broadcast({"type": "audio_stream_end"})
+                print(f"✅ [{label}] Stream complete — {chunk_count} chunks sent")
             else:
-                print(f"⚠️ TTS returned empty [{label}]")
+                # Stream was cut short — tell frontend to stop
+                broadcast({"type": "stop_audio"})
 
         except asyncio.CancelledError:
-            print(f"🛑 [{label}] TTS cancelled mid-generation")
+            print(f"🛑 [{label}] TTS stream cancelled")
+            broadcast({"type": "stop_audio"})
             raise
+        except Exception as e:
+            print(f"❌ [{label}] TTS stream error: {e}")
+            broadcast({"type": "audio_stream_end"})
 
-    task = asyncio.create_task(_run())
+    task = asyncio.create_task(_stream())
     active_tts_tasks[session_id] = task
 
     try:
         await task
     except asyncio.CancelledError:
-        print(f"🛑 [{label}] TTS task was cancelled")
+        print(f"🛑 [{label}] TTS task was cancelled externally")
     finally:
         active_tts_tasks.pop(session_id, None)
 
@@ -681,7 +757,7 @@ async def send_greeting(session_id: str, stop_event: asyncio.Event):
 
     broadcast({"type": "ai_response", "text": GREETING_MESSAGE})
 
-    await safe_tts_and_broadcast(
+    await stream_tts_websocket(
         GREETING_MESSAGE, stop_event, session_id, label="greeting"
     )
     print("✅ Greeting done")
@@ -690,7 +766,7 @@ async def send_greeting(session_id: str, stop_event: asyncio.Event):
 async def process_audio(track, session_id: str, stop_event: asyncio.Event):
     print("🎧 Processing audio stream...")
 
-    # ✅ Create a per-session interrupt event for this call
+    # Create a per-session interrupt event for this call
     interrupt_event = asyncio.Event()
     tts_interrupt_events[session_id] = interrupt_event
 
@@ -726,16 +802,15 @@ async def process_audio(track, session_id: str, stop_event: asyncio.Event):
 
                 print(f"🗣 User: {text}")
 
-                # ✅ STEP 2: User spoke — interrupt any running TTS immediately
+                # STEP 2: User spoke — interrupt any running TTS stream immediately
                 interrupt_event.set()
 
-                # ✅ Cancel the active TTS task if it's still running
                 task = active_tts_tasks.get(session_id)
                 if task and not task.done():
                     task.cancel()
-                    print(f"🛑 TTS interrupted by new user speech")
+                    print(f"🛑 TTS stream interrupted by new user speech")
 
-                # ✅ Tell frontend to stop playing current audio right now
+                # Tell frontend to stop playing immediately
                 broadcast({"type": "stop_audio"})
 
                 session = store.get_session(session_id)
@@ -781,8 +856,8 @@ async def process_audio(track, session_id: str, stop_event: asyncio.Event):
                 session.add_message("assistant", ai_response)
                 broadcast({"type": "ai_response", "text": ai_response})
 
-                # STEP 4: TTS — cancellable, interrupt_event is reset inside
-                await safe_tts_and_broadcast(
+                # STEP 4: Stream TTS bytes over WebSocket in real-time
+                await stream_tts_websocket(
                     ai_response, stop_event, session_id,
                     label=f"stage:{session.stage.value}"
                 )
@@ -792,7 +867,6 @@ async def process_audio(track, session_id: str, stop_event: asyncio.Event):
             import traceback
             traceback.print_exc()
 
-    # ✅ Clean up interrupt event when audio processing ends
     tts_interrupt_events.pop(session_id, None)
 
 
@@ -834,13 +908,11 @@ async def main():
     def on_disconnect(participant):
         print(f"👋 Participant disconnected: {participant.identity}")
 
-        # STEP 1: Set stop event immediately
         if participant.identity in stop_events:
             stop_events[participant.identity].set()
             del stop_events[participant.identity]
             print(f"🛑 Stop event set")
 
-        # STEP 2: Cancel any running TTS task immediately
         all_sessions = store.get_all_sessions()
         if all_sessions:
             latest_session_id = all_sessions[-1]["session_id"]
@@ -849,11 +921,9 @@ async def main():
                 task.cancel()
                 print(f"🛑 TTS task cancelled immediately")
 
-        # STEP 3: Tell frontend to stop playing audio
         broadcast({"type": "stop_audio"})
         print("📢 stop_audio sent to frontend")
 
-        # STEP 4: Generate summary
         start_time       = session_start_times.pop(participant.identity, None)
         duration_seconds = int(time.time() - start_time) if start_time else 0
 
