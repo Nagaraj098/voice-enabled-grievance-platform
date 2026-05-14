@@ -1,10 +1,10 @@
 {
   "issue_category": "Other",
   "severity": "low",
-  "description": "Nagraj has reported an issue with the grievance registration system itself.",
+  "description": "Registration of complaint",
   "resolution_status": "Registered",
   "user_name": "Nagraj",
-  "session_id": "fc75cbe7-5dcf-4df1-9e96-ca52ff6cad28",
+  "session_id": "9a17b4aa-20a1-409c-99c8-63dfe55b1a37",
   "messages": [
     {
       "role": "agent",
@@ -19,5 +19,5 @@
       "text": "Thank you, Nagraj! Could you tell me which category your issue falls under?\nIs it Water Supply, Electricity, Road, Sanitation, Network, or something else?"
     }
   ],
-  "duration": "51s"
+  "duration": "46s"
 }
