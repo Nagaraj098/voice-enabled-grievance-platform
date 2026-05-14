@@ -1,0 +1,15 @@
+{
+  "issue_category": null,
+  "severity": null,
+  "description": null,
+  "resolution_status": null,
+  "user_name": "Unknown",
+  "session_id": "cac611ab-f851-4f48-b098-838a14d1f452",
+  "messages": [
+    {
+      "role": "agent",
+      "text": "Hello! Welcome to the Grievance Registration System. I am here to help you register your complaint today. May I know your full name please?"
+    }
+  ],
+  "duration": "2m 50s"
+}
