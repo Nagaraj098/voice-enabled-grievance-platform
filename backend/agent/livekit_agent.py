@@ -431,6 +431,7 @@ import numpy as np
 import requests
 import json
 import time
+from datetime import datetime, timezone
 
 from livekit import rtc
 from livekit.api import AccessToken, VideoGrants
@@ -565,23 +566,22 @@ async def safe_tts_and_broadcast(
 
     async def _run():
         try:
-            audio_b64 = await tts.synthesize_async(text)
+            chunk_idx = 0
+            async for audio_b64 in tts.synthesize_sentences(text):
+                if stop_event.is_set():
+                    print(f"🛑 [{label}] Call ended during TTS — not broadcasting")
+                    return
+                if interrupt_event and interrupt_event.is_set():
+                    print(f"🛑 [{label}] User spoke during TTS — discarding remaining audio")
+                    return
+                if audio_b64:
+                    broadcast({"type": "agent_audio", "audio": audio_b64})
+                    chunk_idx += 1
 
-            # Check 2: call ended during TTS generation
-            if stop_event.is_set():
-                print(f"🛑 [{label}] Call ended during TTS — not broadcasting")
-                return
-
-            # ✅ Check 3: user spoke during TTS generation — discard this audio
-            if interrupt_event and interrupt_event.is_set():
-                print(f"🛑 [{label}] User spoke during TTS generation — discarding audio")
-                return
-
-            if audio_b64:
-                broadcast({"type": "agent_audio", "audio": audio_b64})
-                print(f"✅ Audio sent [{label}]")
-            else:
+            if chunk_idx == 0:
                 print(f"⚠️ TTS returned empty [{label}]")
+            else:
+                print(f"✅ TTS sent {chunk_idx} chunk(s) [{label}]")
 
         except asyncio.CancelledError:
             print(f"🛑 [{label}] TTS cancelled mid-generation")
@@ -648,6 +648,7 @@ Respond ONLY with valid JSON. No markdown."""
         summary["issue_category"] = session.issue_category
 
     summary["session_id"] = session.session_id
+    summary["created_at"] = datetime.now(timezone.utc).isoformat()
     summary["messages"]   = [
         {"role": "user" if m["role"] == "user" else "agent", "text": m["content"]}
         for m in session.history
@@ -667,7 +668,7 @@ def save_summary(session_id: str, summary: dict):
 
 async def send_greeting(session_id: str, stop_event: asyncio.Event):
     """Auto-send greeting when call starts."""
-    await asyncio.sleep(1.5)
+    await asyncio.sleep(0.4)
 
     if stop_event.is_set():
         print("🛑 Greeting cancelled — call already ended")
@@ -715,8 +716,10 @@ async def process_audio(track, session_id: str, stop_event: asyncio.Event):
 
                 audio_bytes = buffer.get_audio()
 
-                # STEP 1: STT
-                text = stt.transcribe(audio_bytes, sample_rate=WHISPER_SAMPLE_RATE)
+                # STEP 1: STT (thread pool — keeps audio loop responsive)
+                text = await asyncio.to_thread(
+                    stt.transcribe, audio_bytes, WHISPER_SAMPLE_RATE
+                )
                 if not is_valid_transcript(text):
                     continue
 
@@ -765,12 +768,13 @@ async def process_audio(track, session_id: str, stop_event: asyncio.Event):
 
                 broadcast({"type": "agent_thinking"})
 
-                # STEP 3: LLM
-                ai_response = generate_response(
-                    user_message=text,
-                    history=session.history[:-1],
-                    stage=session.stage,
-                    user_name=session.user_name,
+                # STEP 3: LLM (thread pool — non-blocking)
+                ai_response = await asyncio.to_thread(
+                    generate_response,
+                    text,
+                    session.history[:-1],
+                    session.stage,
+                    session.user_name,
                 )
 
                 if stop_event.is_set():

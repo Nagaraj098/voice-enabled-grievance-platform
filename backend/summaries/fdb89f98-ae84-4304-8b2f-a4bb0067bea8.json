@@ -1,0 +1,39 @@
+{
+  "issue_category": "Other",
+  "severity": "low",
+  "description": "The user is feeling emotional and concerned about someone they know who might be missing.",
+  "resolution_status": "Registered",
+  "user_name": "How Are You?",
+  "session_id": "fdb89f98-ae84-4304-8b2f-a4bb0067bea8",
+  "messages": [
+    {
+      "role": "agent",
+      "text": "Hello! Welcome to the Grievance Registration System. I am here to help you register your complaint today. May I know your full name please?"
+    },
+    {
+      "role": "user",
+      "text": "How are you?"
+    },
+    {
+      "role": "agent",
+      "text": "Thank you, How Are You! Could you tell me which category your issue falls under?\nIs it Water Supply, Electricity, Road, Sanitation, Network, or something else?"
+    },
+    {
+      "role": "user",
+      "text": "How are you?"
+    },
+    {
+      "role": "agent",
+      "text": "I'm doing well, thank you for asking, How Are You! However, let's get started with your issue. You didn't specify the category. Could you please describe what exactly is happening with your issue?"
+    },
+    {
+      "role": "user",
+      "text": "I'm going to miss it a lot."
+    },
+    {
+      "role": "agent",
+      "text": "I'm here to help. I sense that you're going through a difficult time, How Are You. It seems like you're feeling emotional about something. Am I correct in saying that you're feeling concerned about someone you know who might be missing?"
+    }
+  ],
+  "duration": "1m 4s"
+}

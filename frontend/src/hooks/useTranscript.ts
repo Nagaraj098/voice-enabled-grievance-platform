@@ -197,45 +197,74 @@ export function useTranscript() {
   const wsRef = useRef<WebSocket | null>(null);
   const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioQueueRef = useRef<string[]>([]);
+  const isPlayingQueueRef = useRef(false);
   const router = useRouter();
 
   const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === "true";
 
-  // ── Stop audio ───────────────────────────────────────────────────────────
+  // ── Stop audio and clear queued TTS chunks ───────────────────────────────
   const stopAudio = useCallback(() => {
+    audioQueueRef.current = [];
+    isPlayingQueueRef.current = false;
     if (audioRef.current) {
       audioRef.current.pause();
+      audioRef.current.onended = null;
       audioRef.current.src = "";
       audioRef.current = null;
-      console.log("🔇 Audio stopped");
     }
     setIsAgentSpeaking(false);
   }, []);
 
-  // ── Play base64 audio ────────────────────────────────────────────────────
-  const playAudio = useCallback((base64Audio: string) => {
-    try {
-      stopAudio();
+  // ── Play queue sequentially (streaming TTS / multi-sentence) ─────────────
+  const drainAudioQueue = useCallback(() => {
+    if (isPlayingQueueRef.current || audioQueueRef.current.length === 0) return;
 
+    const base64Audio = audioQueueRef.current.shift();
+    if (!base64Audio) return;
+
+    isPlayingQueueRef.current = true;
+    setIsAgentSpeaking(true);
+
+    try {
       const audio = new Audio(`data:audio/mpeg;base64,${base64Audio}`);
       audioRef.current = audio;
-      setIsAgentSpeaking(true);
-
-      audio.play().catch((err) => {
-        console.warn("Audio play failed:", err);
-        setIsAgentSpeaking(false);
-      });
 
       audio.onended = () => {
         audioRef.current = null;
-        setIsAgentSpeaking(false);
+        isPlayingQueueRef.current = false;
+        if (audioQueueRef.current.length > 0) {
+          drainAudioQueue();
+        } else {
+          setIsAgentSpeaking(false);
+        }
       };
 
-    } catch (err) {
-      console.error("Audio playback error:", err);
+      audio.onerror = () => {
+        audioRef.current = null;
+        isPlayingQueueRef.current = false;
+        drainAudioQueue();
+      };
+
+      audio.play().catch(() => {
+        isPlayingQueueRef.current = false;
+        setIsAgentSpeaking(false);
+        drainAudioQueue();
+      });
+    } catch {
+      isPlayingQueueRef.current = false;
       setIsAgentSpeaking(false);
+      drainAudioQueue();
     }
-  }, [stopAudio]);
+  }, []);
+
+  const enqueueAudio = useCallback(
+    (base64Audio: string) => {
+      audioQueueRef.current.push(base64Audio);
+      drainAudioQueue();
+    },
+    [drainAudioQueue]
+  );
 
   // ── Mock mode ────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -300,7 +329,7 @@ export function useTranscript() {
             break;
 
           case "agent_audio":
-            if (data.audio) playAudio(data.audio);
+            if (data.audio) enqueueAudio(data.audio);
             break;
 
           // ✅ THIS WAS MISSING — backend sends this on every new STT and on disconnect
@@ -339,7 +368,7 @@ export function useTranscript() {
       wsRef.current = null;
       retryRef.current = setTimeout(connect, RETRY_DELAY_MS);
     };
-  }, [USE_MOCK, playAudio, stopAudio, router]);
+  }, [USE_MOCK, enqueueAudio, stopAudio, router]);
 
   useEffect(() => {
     connect();

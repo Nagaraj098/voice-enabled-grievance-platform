@@ -122,9 +122,8 @@ class Stage(Enum):
 STAGE_PROMPTS = {
 
     Stage.GREETING: """You are a professional grievance registration agent for GRS (Grievance Registration System).
-Greet the user warmly in one sentence, then ask for their full name.
-Keep it short. Example:
-"Hello! Welcome to the Grievance Registration System. May I know your full name please?" """,
+Greet the user warmly in ONE short sentence, then ask for their full name.
+Example: "Hello! Welcome to the Grievance Registration System. May I know your full name please?" """,
 
     Stage.COLLECT_NAME: """You are a professional grievance registration agent.
 The user has given their name. Acknowledge it warmly and then ask what category their issue belongs to.

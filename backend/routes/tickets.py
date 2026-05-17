@@ -2,6 +2,8 @@
 
 import json
 import os
+from datetime import datetime, timezone
+
 from fastapi import APIRouter
 
 router = APIRouter()
@@ -22,8 +24,12 @@ def load_all_summaries() -> list:
         try:
             with open(path, encoding="utf-8") as f:
                 data = json.load(f)
-            # ✅ Add ticket_id from filename
             data["ticket_id"] = filename.replace(".json", "")[:8].upper()
+            if not data.get("created_at"):
+                mtime = os.path.getmtime(path)
+                data["created_at"] = datetime.fromtimestamp(
+                    mtime, tz=timezone.utc
+                ).isoformat()
             tickets.append(data)
         except Exception as e:
             print(f"⚠️ Failed to load {filename}: {e}")

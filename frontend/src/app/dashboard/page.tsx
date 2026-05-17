@@ -111,8 +111,8 @@ export default function DashboardPage() {
     );
     setTickets(sorted.map((s: any) => ({
       session_id: s.session_id || s.id || "",
-      user: s.citizen_name || s.user || "Unknown Citizen",
-      initials: getInitials(s.citizen_name || s.user || "U"),
+      user: s.user_name || s.citizen_name || s.user || "Unknown Citizen",
+      initials: getInitials(s.user_name || s.citizen_name || s.user || "U"),
       description: s.description || s.issue_summary || s.summary || "No description",
       category: s.issue_category || s.category || "GENERAL",
       status: s.resolution_status || s.status || "OPEN",
@@ -128,26 +128,21 @@ export default function DashboardPage() {
   };
 
   const fetchSessions = useCallback(async () => {
-    setLoading(true); setError(false);
+    setLoading(true);
+    setError(false);
     try {
-      const res = await fetch(`${API_BASE}/summaries`);
-      if (!res.ok) throw new Error("no /summaries yet");
+      const res = await fetch(`${API_BASE}/tickets`, { cache: "no-store" });
+      if (!res.ok) throw new Error(`Backend returned ${res.status}`);
       const data = await res.json();
-      applyData(data.summaries || data || []);
+      const list = data.tickets ?? data.summaries ?? (Array.isArray(data) ? data : []);
+      applyData(list);
     } catch {
-      try {
-        const res = await fetch(`${API_BASE}/sessions`);
-        if (!res.ok) throw new Error("no /sessions yet");
-        const data = await res.json();
-        const ids: string[] = data.session_ids || data.sessions || [];
-        const results = await Promise.allSettled(
-          ids.map(id => fetch(`${API_BASE}/summary/${id}`).then(r => r.json()))
-        );
-        applyData(results.filter(r => r.status === "fulfilled").map((r: any) => r.value));
-      } catch {
-        setError(true); setTickets([]); setCalls([]);
-      }
-    } finally { setLoading(false); }
+      setError(true);
+      setTickets([]);
+      setCalls([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { fetchSessions(); }, [fetchSessions]);
@@ -230,8 +225,8 @@ export default function DashboardPage() {
             {!loading && error && (
               <div className="flex flex-col items-center justify-center py-16 gap-3">
                 <div className="w-12 h-12 rounded-xl bg-muted border border-border flex items-center justify-center text-xl">📭</div>
-                <p className="text-muted-foreground font-medium text-sm">Backend not connected yet</p>
-                <p className="text-muted-foreground text-xs">Complete a voice call — it will appear here automatically</p>
+                <p className="text-muted-foreground font-medium text-sm">Cannot reach backend</p>
+                <p className="text-muted-foreground text-xs">Start FastAPI on port 8000: uvicorn main:app --reload --port 8000</p>
                 <button onClick={fetchSessions}
                   className="mt-2 text-xs text-blue-400 hover:text-blue-300 border border-blue-500/20 px-4 py-1.5 rounded-lg transition-colors">
                   Try again
