@@ -3,7 +3,7 @@ import wave
 
 import requests
 
-COLAB_WHISPER_URL = "https://examined-fold-hometown-bet.trycloudflare.com/transcribe"
+COLAB_WHISPER_URL = "https://bosnia-wellington-repeated-thoroughly.trycloudflare.com/transcribe"
 
 
 class STTService:
