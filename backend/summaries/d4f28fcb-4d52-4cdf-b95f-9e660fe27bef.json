@@ -1,0 +1,48 @@
+{
+  "issue_category": "Road",
+  "severity": "high",
+  "description": "There is a sinkhole in the road.",
+  "resolution_status": "Registered",
+  "user_name": "Narad.",
+  "session_id": "d4f28fcb-4d52-4cdf-b95f-9e660fe27bef",
+  "created_at": "2026-05-19T09:46:17.575592+00:00",
+  "messages": [
+    {
+      "role": "agent",
+      "text": "Hello! Welcome to the Grievance Registration System. I am here to help you register your complaint today. May I know your full name please?"
+    },
+    {
+      "role": "user",
+      "text": "My name is Narad."
+    },
+    {
+      "role": "agent",
+      "text": "Thank you, Narad! Could you tell me which category your issue falls under - is it Water Supply, Electricity, Road, Sanitation, Network, or something else?"
+    },
+    {
+      "role": "user",
+      "text": "So, I am facing a road issue."
+    },
+    {
+      "role": "agent",
+      "text": "Narad, sorry to hear that. It seems you're having trouble with a pothole on the road. Can you please describe what exactly is happening with the pothole - is it causing any trouble or inconvenience?"
+    },
+    {
+      "role": "user",
+      "text": "There is a sinkhole in map. What is the contact?"
+    },
+    {
+      "role": "agent",
+      "text": "Narad, I understand the urgency. For a road cave-in or sinkhole, please call 1533 immediately. This is an emergency, and we'll take action to barricade the area within 4 hours. We'll also repair the road within 48 hours, as per our policy."
+    },
+    {
+      "role": "user",
+      "text": "Garbage is not collected, so what is the contact number?"
+    },
+    {
+      "role": "agent",
+      "text": "Narad, I apologize for the inconvenience! For your garbage collection issue, please call 1533 or use the BBMP Sahaaya app, providing your ward number and area name. We'll arrange for immediate pickup within 24 hours."
+    }
+  ],
+  "duration": "9m 1s"
+}

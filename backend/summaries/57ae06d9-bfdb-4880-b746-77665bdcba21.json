@@ -1,0 +1,52 @@
+{
+  "issue_category": "Other",
+  "severity": "low",
+  "description": "I have road issues",
+  "resolution_status": "Registered",
+  "user_name": "Nan Raj.",
+  "session_id": "57ae06d9-bfdb-4880-b746-77665bdcba21",
+  "created_at": "2026-05-19T11:29:05.708674+00:00",
+  "messages": [
+    {
+      "role": "agent",
+      "text": "Hello! Welcome to the Grievance Registration System. I am here to help you register your complaint today. May I know your full name please?"
+    },
+    {
+      "role": "user",
+      "text": "My name is Nan Raj."
+    },
+    {
+      "role": "agent",
+      "text": "Thank you, Nan Raj! Could you tell me which category your issue falls under, please? Is it Water Supply, Electricity, Road, Sanitation, Network, or something else?"
+    },
+    {
+      "role": "user",
+      "text": "Hello.  Hi.  Hi.  Hello.  Hi.  Hello.  Hello.  Hi."
+    },
+    {
+      "role": "agent",
+      "text": "Nan Raj, I understand you're excited, but let's get started with your issue. Could you please focus on the category your problem falls under? Is it Water Supply, Electricity, Road, Sanitation, Network, or something else?"
+    },
+    {
+      "role": "user",
+      "text": "Thank you."
+    },
+    {
+      "role": "agent",
+      "text": "It seems like you're being a bit reserved, Nan Raj. No worries, let's start again. Could you please describe what exactly is happening with your issue?"
+    },
+    {
+      "role": "user",
+      "text": "I have road issues"
+    },
+    {
+      "role": "agent",
+      "text": "Nan Raj, I understand how frustrating that must be. Based on our knowledge, for road issues, you can report a pothole or street light not working by calling the BBMP helpline 1545 with the exact location and photos. Let me confirm \u2014 you're facing a problem with a street light not working, is that correct?"
+    },
+    {
+      "role": "user",
+      "text": "I have road issues."
+    }
+  ],
+  "duration": "2m 18s"
+}

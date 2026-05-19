@@ -17,7 +17,7 @@
     {"rule": "Road cave-in or sinkhole treated as emergency within 4 hours"}
   ],
   "contact_info": {
-    "helpline": "1533",
+    "helpline": "1545",
     "email": "grievance@bbmp.gov.in",
     "swm_email": "swm@bbmp.gov.in",
     "website": "https://bbmp.gov.in",
@@ -59,25 +59,25 @@
   "common_grievances": [
     {
       "issue": "Potholes on road",
-      "resolution": "Report to BBMP helpline 1533 with exact location and photos. Temporary patching within 24 hours for accident-prone roads. Permanent repair within 7 days.",
+      "resolution": "Report to BBMP helpline 1545 with exact location and photos. Temporary patching within 24 hours for accident-prone roads. Permanent repair within 7 days.",
       "resolution_time": "24 hours - 7 days",
       "severity": "Medium"
     },
     {
       "issue": "Road cave-in or sinkhole",
-      "resolution": "Call 1533 immediately. This is an emergency. Barricading within 4 hours. Repair within 48 hours.",
+      "resolution": "Call 1545 immediately. This is an emergency. Barricading within 4 hours. Repair within 48 hours.",
       "resolution_time": "4-48 hours",
       "severity": "Critical"
     },
     {
       "issue": "Street light not working",
-      "resolution": "Report to BBMP helpline 1533 with street name and location. Repair within 48 hours. Use BBMP Sahaaya app for faster response.",
+      "resolution": "Report to BBMP helpline 1545 with street name and location. Repair within 48 hours. Use BBMP Sahaaya app for faster response.",
       "resolution_time": "48 hours",
       "severity": "Low"
     },
     {
       "issue": "Garbage not collected",
-      "resolution": "Call 1533 or BBMP Sahaaya app. Specify ward number and area. Immediate pickup arranged. Resolved within 24 hours.",
+      "resolution": "Call 1545 or BBMP Sahaaya app. Specify ward number and area. Immediate pickup arranged. Resolved within 24 hours.",
       "resolution_time": "24 hours",
       "severity": "Medium"
     },
@@ -89,7 +89,7 @@
     },
     {
       "issue": "Blocked or overflowing drain",
-      "resolution": "Call 1533. Drain cleaning within 48 hours. Emergency cleaning for overflow within 12 hours.",
+      "resolution": "Call 1545. Drain cleaning within 48 hours. Emergency cleaning for overflow within 12 hours.",
       "resolution_time": "12-48 hours",
       "severity": "High"
     },
@@ -119,19 +119,19 @@
   "faq": [
     {
       "question": "How do I report a pothole?",
-      "answer": "Call BBMP helpline 1533 or use the BBMP Sahaaya app. Share exact location and photos. Temporary patching within 24 hours for dangerous potholes."
+      "answer": "Call BBMP helpline 1545 or use the BBMP Sahaaya app. Share exact location and photos. Temporary patching within 24 hours for dangerous potholes."
     },
     {
       "question": "Garbage has not been collected for 2 days. What to do?",
-      "answer": "Call 1533 or use BBMP Sahaaya app. Provide ward number and area name. Immediate pickup arranged within 24 hours."
+      "answer": "Call 1545 or use BBMP Sahaaya app. Provide ward number and area name. Immediate pickup arranged within 24 hours."
     },
     {
       "question": "Street light is not working near my house. How to report?",
-      "answer": "Call BBMP helpline 1533 with street name and nearest landmark. Repair within 48 hours. You can also use BBMP Sahaaya app."
+      "answer": "Call BBMP helpline 1545 with street name and nearest landmark. Repair within 48 hours. You can also use BBMP Sahaaya app."
     },
     {
       "question": "There is a road cave-in. Is it an emergency?",
-      "answer": "Yes, road cave-in is a critical emergency. Call 1533 immediately. Barricading done within 4 hours. Do not drive or walk near the affected area."
+      "answer": "Yes, road cave-in is a critical emergency. Call 1545 immediately. Barricading done within 4 hours. Do not drive or walk near the affected area."
     }
   ]
 }

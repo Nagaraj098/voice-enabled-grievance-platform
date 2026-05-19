@@ -439,7 +439,7 @@ from livekit.api import AccessToken, VideoGrants
 from agent.audio_buffer import AudioBuffer
 from agent.state_machine import Stage, get_next_stage
 from services.stt_service import STTService
-from services.llm_service import generate_response
+from services.llm_service import stream_response_sentences
 from services.tts_service import TTSService
 from sessions.session_store import store
 from dotenv import load_dotenv
@@ -489,12 +489,40 @@ active_tts_tasks: dict[str, asyncio.Task] = {}
 # ✅ NEW: per-session TTS interrupt events (set when user speaks, cancels current TTS)
 tts_interrupt_events: dict[str, asyncio.Event] = {}
 
+# LiveKit sync callbacks need this to schedule non-blocking HTTP broadcasts
+_agent_loop: asyncio.AbstractEventLoop | None = None
+
 
 def broadcast(data: dict):
+    """Synchronous HTTP broadcast to FastAPI (blocking). Prefer broadcast_async from coroutines."""
     try:
         requests.post(f"{FASTAPI_URL}/internal/broadcast", json=data, timeout=5)
     except Exception as e:
         print(f"❌ Broadcast error: {e}")
+
+
+async def broadcast_async(data: dict) -> None:
+    """POST /internal/broadcast in a worker thread so the asyncio loop never blocks on HTTP."""
+    await asyncio.to_thread(broadcast, data)
+
+
+def schedule_broadcast(data: dict) -> None:
+    """
+    Fire-and-forget broadcast from sync LiveKit callbacks (e.g. on_track, on_disconnect).
+    Uses the agent event loop; falls back to sync broadcast if the loop is not ready.
+    """
+    loop = _agent_loop
+    if loop is None or not loop.is_running():
+        broadcast(data)
+        return
+
+    def _enqueue() -> None:
+        asyncio.create_task(broadcast_async(data))
+
+    try:
+        loop.call_soon_threadsafe(_enqueue)
+    except Exception:
+        broadcast(data)
 
 
 def resample(pcm: np.ndarray, orig_sr: int, target_sr: int) -> np.ndarray:
@@ -575,7 +603,7 @@ async def safe_tts_and_broadcast(
                     print(f"🛑 [{label}] User spoke during TTS — discarding remaining audio")
                     return
                 if audio_b64:
-                    broadcast({"type": "agent_audio", "audio": audio_b64})
+                    await broadcast_async({"type": "agent_audio", "audio": audio_b64})
                     chunk_idx += 1
 
             if chunk_idx == 0:
@@ -596,6 +624,74 @@ async def safe_tts_and_broadcast(
         print(f"🛑 [{label}] TTS task was cancelled")
     finally:
         active_tts_tasks.pop(session_id, None)
+
+
+async def run_streaming_llm_tts(
+    user_text: str,
+    session,
+    session_id: str,
+    stop_event: asyncio.Event,
+    label: str = "",
+):
+    """
+    Stream LLM tokens into sentence chunks, synthesize each sentence, and broadcast audio
+    as soon as it is ready (time-to-first-audio). Registers one asyncio.Task so new STT
+    can cancel both the open HTTP stream and any pending TTS work.
+    """
+    interrupt_event = tts_interrupt_events.get(session_id)
+    if interrupt_event:
+        interrupt_event.clear()
+
+    async def _pipeline():
+        parts: list[str] = []
+        try:
+            async for sentence in stream_response_sentences(
+                user_text,
+                session.history[:-1],
+                session.stage,
+                session.user_name,
+            ):
+                if stop_event.is_set():
+                    return
+                if interrupt_event and interrupt_event.is_set():
+                    print(f"🛑 [{label}] Interrupted during LLM/TTS stream")
+                    return
+
+                sent = sentence.strip()
+                if not sent:
+                    continue
+                parts.append(sent)
+
+                audio_b64 = await tts.synthesize_async(sent)
+                if stop_event.is_set():
+                    return
+                if interrupt_event and interrupt_event.is_set():
+                    print(f"🛑 [{label}] Interrupted before sending audio chunk")
+                    return
+                if audio_b64:
+                    await broadcast_async({"type": "agent_audio", "audio": audio_b64})
+
+            full = " ".join(parts).strip()
+            if full and not stop_event.is_set() and not (
+                interrupt_event and interrupt_event.is_set()
+            ):
+                session.add_message("assistant", full)
+                await broadcast_async({"type": "ai_response", "text": full})
+                print(f"🤖 AI [{session.stage.value}]: {full[:100]}...")
+
+        except asyncio.CancelledError:
+            print(f"🛑 [{label}] LLM/TTS pipeline cancelled")
+            raise
+
+    task = asyncio.create_task(_pipeline())
+    active_tts_tasks[session_id] = task
+    try:
+        await task
+    except asyncio.CancelledError:
+        print(f"🛑 [{label}] pipeline await cancelled")
+    finally:
+        if active_tts_tasks.get(session_id) is task:
+            active_tts_tasks.pop(session_id, None)
 
 
 def generate_summary(session, duration_seconds: int) -> dict:
@@ -680,7 +776,7 @@ async def send_greeting(session_id: str, stop_event: asyncio.Event):
     if session:
         session.add_message("assistant", GREETING_MESSAGE)
 
-    broadcast({"type": "ai_response", "text": GREETING_MESSAGE})
+    await broadcast_async({"type": "ai_response", "text": GREETING_MESSAGE})
 
     await safe_tts_and_broadcast(
         GREETING_MESSAGE, stop_event, session_id, label="greeting"
@@ -739,7 +835,7 @@ async def process_audio(track, session_id: str, stop_event: asyncio.Event):
                     print(f"🛑 TTS interrupted by new user speech")
 
                 # ✅ Tell frontend to stop playing current audio right now
-                broadcast({"type": "stop_audio"})
+                await broadcast_async({"type": "stop_audio"})
 
                 session = store.get_session(session_id)
                 if not session:
@@ -757,7 +853,7 @@ async def process_audio(track, session_id: str, stop_event: asyncio.Event):
                     print(f"📂 Category captured: {category}")
 
                 session.add_message("user", text)
-                broadcast({"type": "user_transcript", "text": text})
+                await broadcast_async({"type": "user_transcript", "text": text})
 
                 session.stage = get_next_stage(session.stage, text)
                 print(f"📍 Stage: {session.stage.value}")
@@ -766,30 +862,20 @@ async def process_audio(track, session_id: str, stop_event: asyncio.Event):
                     print("🛑 Stop before LLM")
                     break
 
-                broadcast({"type": "agent_thinking"})
+                await broadcast_async({"type": "agent_thinking"})
 
-                # STEP 3: LLM (thread pool — non-blocking)
-                ai_response = await asyncio.to_thread(
-                    generate_response,
+                # STEP 3+4: streamed LLM + per-sentence TTS (one task — cancelled when new STT arrives)
+                await run_streaming_llm_tts(
                     text,
-                    session.history[:-1],
-                    session.stage,
-                    session.user_name,
+                    session,
+                    session_id,
+                    stop_event,
+                    label=f"stage:{session.stage.value}",
                 )
 
                 if stop_event.is_set():
-                    print("🛑 Stop after LLM — skipping TTS")
+                    print("🛑 Stop after LLM/TTS pipeline")
                     break
-
-                print(f"🤖 AI: {ai_response}")
-                session.add_message("assistant", ai_response)
-                broadcast({"type": "ai_response", "text": ai_response})
-
-                # STEP 4: TTS — cancellable, interrupt_event is reset inside
-                await safe_tts_and_broadcast(
-                    ai_response, stop_event, session_id,
-                    label=f"stage:{session.stage.value}"
-                )
 
         except Exception as e:
             print("❌ Audio Processing Error:", e)
@@ -801,6 +887,9 @@ async def process_audio(track, session_id: str, stop_event: asyncio.Event):
 
 
 async def main():
+    global _agent_loop
+    _agent_loop = asyncio.get_running_loop()
+
     room = rtc.Room()
 
     token = (
@@ -830,7 +919,7 @@ async def main():
             session_start_times[participant.identity] = time.time()
             stop_events[participant.identity]         = stop_event
             print(f"📝 Session: {session.session_id}")
-            broadcast({"type": "session_id", "session_id": session.session_id})
+            schedule_broadcast({"type": "session_id", "session_id": session.session_id})
             asyncio.create_task(send_greeting(session.session_id, stop_event))
             asyncio.create_task(process_audio(track, session.session_id, stop_event))
 
@@ -854,7 +943,7 @@ async def main():
                 print(f"🛑 TTS task cancelled immediately")
 
         # STEP 3: Tell frontend to stop playing audio
-        broadcast({"type": "stop_audio"})
+        schedule_broadcast({"type": "stop_audio"})
         print("📢 stop_audio sent to frontend")
 
         # STEP 4: Generate summary
@@ -868,7 +957,7 @@ async def main():
                 print("📋 Generating summary...")
                 summary = generate_summary(session, duration_seconds)
                 save_summary(session.session_id, summary)
-                broadcast({"type": "summary_ready", "session_id": session.session_id})
+                schedule_broadcast({"type": "summary_ready", "session_id": session.session_id})
                 print(f"✅ Summary ready: {session.session_id}")
 
 

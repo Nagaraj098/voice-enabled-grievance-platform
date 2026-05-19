@@ -1,13 +1,16 @@
 import io
+import os
 import wave
 
 import requests
 
-COLAB_WHISPER_URL = "https://bosnia-wellington-repeated-thoroughly.trycloudflare.com/transcribe"
+# Remote Colab / tunnel endpoint — override with STT_URL for local faster-whisper HTTP service
+DEFAULT_STT_URL = "https://scotia-collect-alter-elliott.trycloudflare.com/transcribe"
 
 
 class STTService:
-    def __init__(self, url: str = COLAB_WHISPER_URL):
+    def __init__(self, url: str | None = None):
+        url = url or os.getenv("STT_URL", DEFAULT_STT_URL)
         self.url = url
         self._session = requests.Session()
 

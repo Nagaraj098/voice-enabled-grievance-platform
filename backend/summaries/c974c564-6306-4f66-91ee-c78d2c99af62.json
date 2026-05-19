@@ -1,0 +1,32 @@
+{
+  "issue_category": "Electricity",
+  "severity": "low",
+  "description": "Street light is not working near the user's house",
+  "resolution_status": "Registered",
+  "user_name": "Bye. Bye.",
+  "session_id": "c974c564-6306-4f66-91ee-c78d2c99af62",
+  "created_at": "2026-05-19T10:55:08.621418+00:00",
+  "messages": [
+    {
+      "role": "agent",
+      "text": "Hello! Welcome to the Grievance Registration System. I am here to help you register your complaint today. May I know your full name please?"
+    },
+    {
+      "role": "user",
+      "text": "Bye.  Bye."
+    },
+    {
+      "role": "agent",
+      "text": "Thank you, Bye! Could you tell me which category your issue falls under, is it Water Supply, Electricity, Road, Sanitation, Network, or something else?"
+    },
+    {
+      "role": "user",
+      "text": "It is under electricity issue"
+    },
+    {
+      "role": "agent",
+      "text": "Bye, I understand that your issue is related to electricity. According to our records, if your street light is not working near your house, you can report it by calling the BBMP helpline number 1533 with the street name and nearest landmark. Repair is usually done within 48 hours. Is this the exact issue you're experiencing?"
+    }
+  ],
+  "duration": "51s"
+}
