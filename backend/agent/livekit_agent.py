@@ -661,8 +661,15 @@ async def run_streaming_llm_tts(
                 if not sent:
                     continue
                 parts.append(sent)
+                cumulative = " ".join(parts).strip()
 
-                audio_b64 = await tts.synthesize_async(sent)
+                # UI text + TTS synthesis in parallel (WS partial arrives alongside audio work)
+                _, audio_b64 = await asyncio.gather(
+                    broadcast_async(
+                        {"type": "ai_response_partial", "text": cumulative}
+                    ),
+                    tts.synthesize_async(sent),
+                )
                 if stop_event.is_set():
                     return
                 if interrupt_event and interrupt_event.is_set():
@@ -676,6 +683,7 @@ async def run_streaming_llm_tts(
                 interrupt_event and interrupt_event.is_set()
             ):
                 session.add_message("assistant", full)
+                # Finalize transcript row (clears streaming flag on client)
                 await broadcast_async({"type": "ai_response", "text": full})
                 print(f"🤖 AI [{session.stage.value}]: {full[:100]}...")
 

@@ -1,0 +1,72 @@
+{
+  "issue_category": "Other",
+  "severity": "high",
+  "description": "Sinkhole in the road",
+  "resolution_status": "Registered",
+  "user_name": "Nagraj",
+  "session_id": "9b48ef34-60c9-46b1-92c7-a2958a5faf6f",
+  "created_at": "2026-05-19T14:55:23.202469+00:00",
+  "messages": [
+    {
+      "role": "agent",
+      "text": "Hello! Welcome to the Grievance Registration System. I am here to help you register your complaint today. May I know your full name please?"
+    },
+    {
+      "role": "user",
+      "text": "Once you can play later on"
+    },
+    {
+      "role": "agent",
+      "text": "Thank you, Once you can play later on! Could you tell me which category your issue falls under? Is it Water Supply, Electricity, Road, Sanitation, Network, or something else?"
+    },
+    {
+      "role": "user",
+      "text": "My name is Nagraj."
+    },
+    {
+      "role": "agent",
+      "text": "Hello Nagraj, I've noted your name. Now, could you please describe the issue you're facing?"
+    },
+    {
+      "role": "user",
+      "text": "So, I am facing the road issue, could you provide me the helpline number?"
+    },
+    {
+      "role": "agent",
+      "text": "I understand how frustrating that must be, Nagraj. Based on our records, the Roads and Sanitation department can be reached at 1545. Let me confirm - you're facing a road issue, is that correct?"
+    },
+    {
+      "role": "user",
+      "text": "so can I register and complain"
+    },
+    {
+      "role": "agent",
+      "text": "Yes, Nagraj, you can definitely register a complaint. Let me confirm - you'd like to report a road issue and you're expecting a resolution within 24 hours for a temporary patching of a dangerous pothole, correct?"
+    },
+    {
+      "role": "user",
+      "text": "So, there is a sinkhole in my road, so which department can help me?"
+    },
+    {
+      "role": "agent",
+      "text": "I understand how concerning that must be, Nagraj. Based on our records, for a road cave-in or sinkhole, which is an emergency, you should call 1545 immediately."
+    },
+    {
+      "role": "user",
+      "text": "can I contact."
+    },
+    {
+      "role": "agent",
+      "text": "Nagraj, you should call 1545 immediately to report the road cave-in or sinkhole. Let me confirm - you're experiencing a road cave-in or sinkhole, and you're looking for the emergency number, is that correct?"
+    },
+    {
+      "role": "user",
+      "text": "So, how many days it will take?"
+    },
+    {
+      "role": "agent",
+      "text": "I understand your concern, Nagraj. According to our records, the Roads and Sanitation department should send a survey team within 7 days to assess the issue, and action will be taken within 15 days."
+    }
+  ],
+  "duration": "3m 1s"
+}

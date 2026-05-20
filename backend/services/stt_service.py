@@ -5,7 +5,7 @@ import wave
 import requests
 
 # Remote Colab / tunnel endpoint — override with STT_URL for local faster-whisper HTTP service
-DEFAULT_STT_URL = "https://scotia-collect-alter-elliott.trycloudflare.com/transcribe"
+DEFAULT_STT_URL = "https://mitchell-whom-coalition-bob.trycloudflare.com/transcribe"
 
 
 class STTService:

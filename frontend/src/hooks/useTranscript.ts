@@ -305,27 +305,78 @@ export function useTranscript() {
           case "user_transcript":
             // ✅ Stop AI audio the moment user speech is detected
             stopAudio();
-            setMessages((prev) => [...prev, {
-              id: crypto.randomUUID(),
-              role: "user",
-              text: data.text,
-              timestamp: Date.now(),
-            }]);
+            setMessages((prev) => {
+              const last = prev[prev.length - 1];
+              const base =
+                last?.role === "agent" && last.streaming
+                  ? [...prev.slice(0, -1), { ...last, streaming: false }]
+                  : prev;
+              return [
+                ...base,
+                {
+                  id: crypto.randomUUID(),
+                  role: "user",
+                  text: data.text,
+                  timestamp: Date.now(),
+                },
+              ];
+            });
             break;
 
           case "agent_thinking":
             setIsThinking(true);
             break;
 
+          /** Cumulative agent text while LLM/TTS stream — updates same bubble as audio plays */
+          case "ai_response_partial":
+            setIsThinking(false);
+            setMessages((prev) => {
+              const last = prev[prev.length - 1];
+              if (last?.role === "agent" && last.streaming) {
+                return [
+                  ...prev.slice(0, -1),
+                  { ...last, text: data.text, timestamp: Date.now() },
+                ];
+              }
+              return [
+                ...prev,
+                {
+                  id: crypto.randomUUID(),
+                  role: "agent",
+                  text: data.text,
+                  timestamp: Date.now(),
+                  streaming: true,
+                },
+              ];
+            });
+            break;
+
           case "ai_response":
           case "agent_response":
             setIsThinking(false);
-            setMessages((prev) => [...prev, {
-              id: crypto.randomUUID(),
-              role: "agent",
-              text: data.text,
-              timestamp: Date.now(),
-            }]);
+            setMessages((prev) => {
+              const last = prev[prev.length - 1];
+              if (last?.role === "agent" && last.streaming) {
+                return [
+                  ...prev.slice(0, -1),
+                  {
+                    ...last,
+                    text: data.text,
+                    streaming: false,
+                    timestamp: Date.now(),
+                  },
+                ];
+              }
+              return [
+                ...prev,
+                {
+                  id: crypto.randomUUID(),
+                  role: "agent",
+                  text: data.text,
+                  timestamp: Date.now(),
+                },
+              ];
+            });
             break;
 
           case "agent_audio":
